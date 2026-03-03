@@ -4,8 +4,12 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <title>收多易松山店 AI 客服</title>
+    <title>收多易客服小幫手</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.css" />
+    <style>
+      /* 這裡可以自定義載入畫面或背景 */
+      body { background-color: #f8f9fa; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -18,107 +22,62 @@
           "app.py": `
 import streamlit as st
 
-# --- 完整資料庫導入 ---
+# --- 介面美化配置 ---
+st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
+
+# 自定義 CSS 美化介面
+st.markdown("""
+    <style>
+    .stApp {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .main {
+        background-color: #ffffff;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 20px;
+        border: 1px solid #ff4b4b;
+        color: #ff4b4b;
+    }
+    .stButton>button:hover {
+        background-color: #ff4b4b;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- 側邊欄：快速資訊與聯絡 ---
+with st.sidebar:
+    st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=180)
+    st.title("松山據點資訊")
+    st.info("📍 台北市南港區八德路四段768巷5號2F-1")
+    st.success("📞 02-2653-3645")
+    st.warning("⏰ 平日專人接待: 10:00-19:00\\n🔑 租戶進出: 24H")
+    st.write("---")
+    st.markdown("### 快速連結")
+    st.link_button("🌐 收多易官網", "https://www.storeasy.com.tw")
+    st.link_button("📊 線上租倉評估", "https://3-dstorage.vercel.app")
+
+# --- 資料庫邏輯優化 ---
+# 增加語義對映表，讓關鍵字抓取更精準
 faq_knowledge = [
     {
-        "keywords": ["24小時", "幾點", "半夜", "進出", "時間"],
-        "answer": "🕒 **進出時間**：\\n已承租用戶可 **24小時** 持門禁卡或專屬 APP 自由進出據點。"
+        "id": "rent_guide",
+        "keywords": ["租倉", "如何租", "怎麼租", "租賃", "租屋", "承租", "流程", "想租"],
+        "answer": "🏠 **如何租倉？**\\n\\n為了提供最精準的空間建議與報價，建議您先進行**線上空間評估**：\\n👉 [點此開始線上評估及導引](https://3-dstorage.vercel.app)\\n\\n**租倉三步驟：**\\n1. **線上評估**或現場看倉。\\n2. 準備**身分證件** (個人) 或 **公司大章** (企業)。\\n3. 簽約繳交首月租金及**兩個月押金**即可領卡進出。"
     },
     {
-        "keywords": ["地址", "地點", "在哪", "地圖", "google", "map", "松山車站"],
-        "answer": "📍 **據點位置**：\\n松山迷你倉位於 **南港區八德路四段768巷5號2F-1**，就在松山車站對面！\\n🔗 [點我開啟 Google 地圖](https://maps.app.goo.gl/7PF1dey922GP5rhJ9)"
+        "id": "elevator",
+        "keywords": ["電梯", "貨梯", "搬運", "上樓", "下樓", "升降"],
+        "answer": "📦 **搬運設備服務：**\\n\\n您是在詢問如何將物品搬運至倉庫嗎？\\n- **專用貨梯**：店內配有大型貨梯 (135*180*205cm)，限重1000公斤。\\n- **升降設備**：租用上層倉庫客戶，現場備有**電動升降機**與推車，即使是高處存取也能輕鬆完成。"
     },
     {
-        "keywords": ["接待", "有人嗎", "專人", "參觀", "看倉"],
-        "answer": "🙋‍♂️ **現場接待與參觀**：\\n平日 **10:00-19:00** 現場有專人接待，提供參觀及講解服務。歡迎直接於營業時間過來！"
+        "id": "24h",
+        "keywords": ["24小時", "半夜", "幾點", "進出", "時間", "全天"],
+        "answer": "🕒 **進出時間說明：**\\n\\n收多易松山據點對承租客戶提供 **24小時自由進出** 服務。\\n您只需使用感應卡或專屬 APP 即可開啟大門。\\n*(非營業時間若遇緊急狀況，請撥：0800-458-075)*"
     },
     {
-        "keywords": ["搬運", "上層", "重物", "電梯", "升降"],
-        "answer": "📦 **搬運輔助**：\\n- **上層倉庫**：現場備有推車、電動升降機協助搬運。\\n- **貨梯**：店內配有大型貨梯 (135*180*205cm，限重1000kg)，搬運大型物件非常省力。"
-    },
-    {
-        "keywords": ["開門", "悠遊卡", "鑰匙", "app", "門禁"],
-        "answer": "🔑 **如何開門**：\\n- **據點大門**：使用悠遊卡或專屬 APP 開啟。\\n- **個人倉庫門**：請使用據點提供的鑰匙開啟。"
-    },
-    {
-        "keywords": ["捷運", "公車", "交通", "怎麼去", "大眾運輸"],
-        "answer": "🚇 **交通建議**：\\n- **捷運**：松山站 4 號出口，步行 3 分鐘。\\n- **公車**：搭至「玉成里」站下車，步行 3 分鐘。"
-    },
-    {
-        "keywords": ["停車", "卸貨", "貨車", "地下室"],
-        "answer": "🅿️ **停車資訊**：\\n大樓設有停車場。請從八德路右轉玉成街（萊爾富處再右轉），第一個黃色網狀線左轉至 B2。\\n- **車位**：27、33、41 號 (告知管理員是收多易客戶)。\\n- **貨車**：請停放於一樓卸貨區。"
-    },
-    {
-        "keywords": ["塞車", "尖峰", "順暢"],
-        "answer": "🚗 **交通提醒**：\\n上下班時間八德路較壅塞，建議避開 **早上 8-9 點** 及 **下午 5-7 點** 前往最順暢。"
-    },
-    {
-        "keywords": ["紙箱", "購買", "價格", "箱子"],
-        "answer": "📦 **紙箱販售**：\\n現場提供三種尺寸紙箱：\\n- **小 ($45)**: 35*30*25 cm\\n- **中 ($55)**: 48*36*32 cm\\n- **大 ($65)**: 60*45*40 cm\\n*數量有限，建議事先詢問。*"
-    },
-    {
-        "keywords": ["推車", "板車"],
-        "answer": "🛒 **搬運工具**：\\n店內現場備有推車，可協助您順利搬運物品。"
-    },
-    {
-        "keywords": ["廁所", "洗手間", "wifi", "網路"],
-        "answer": "🚻 **現場設施**：\\n- **洗手間**：備有專用洗手間供客戶整理期間使用。\\n- **WIFI**：現場提供免費無線網路。"
-    },
-    {
-        "keywords": ["包裹", "代收", "信件", "快遞"],
-        "answer": "📩 **包裹代收服務**：\\n提供代收信件與包裹服務。\\n- 三邊總和需小於 200cm。\\n- 到件通知後需於 3 天內領取。\\n*收件資訊務必填寫完整。*"
-    },
-    {
-        "keywords": ["整理", "打包", "膠帶", "剪刀"],
-        "answer": "✂️ **打包空間**：\\n設有簡易作業區，提供膠帶、剪刀等基本工具供客戶整理物品。"
-    },
-    {
-        "keywords": ["網拍", "蝦皮", "7-11", "寄貨"],
-        "answer": "🏪 **寄貨便利性**：\\n附近步行 5 分鐘內有 **蝦皮店到店** 與 **7-11**，對網拍賣家寄取貨非常方便！"
-    },
-    {
-        "keywords": ["租金", "價格", "多少錢", "方案", "預算"],
-        "answer": "💰 **租金參考**：\\n租金每月約 **$950 至 $12,640** 不等。依照櫃型尺寸（文件櫃到大型家具倉）與租期方案而定，建議現場參觀選出最適合您的空間。"
-    },
-    {
-        "keywords": ["電話", "連絡", "緊急", "求助", "報修"],
-        "answer": "📞 **聯繫我們**：\\n- **營業時間**：02-2653-3645\\n- **非營業時間(緊急)**：0800-458-075"
-    },
-    {
-        "keywords": ["營登", "地址登記", "公司", "設立", "營業執照"],
-        "answer": "🏢 **加值服務**：\\n收多易松山倉庫提供 **租賃地址登記服務** (限特定行業別)，方便公司設立營登使用。"
-    }
-]
-
-def warehouse_bot_logic(user_input):
-    user_input = user_input.lower()
-    for faq in faq_knowledge:
-        if any(kw in user_input for kw in faq["keywords"]):
-            return faq["answer"]
-    return "🤖 抱歉，我暫時沒辦法回答這個問題。您可以試著問：\\n- 『哪裡可以停車？』\\n- 『有賣紙箱嗎？』\\n- 『捷運怎麼走？』\\n- 『幾點可以進出？』"
-
-# --- 介面呈現 ---
-st.title("📦 收多易松山店 AI 智能管家")
-st.write("您好！我是您的 24H 線上助手，關於松山倉庫的任何問題都可以問我。")
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-if prompt := st.chat_input("請輸入您的問題..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-    with st.chat_message("assistant"):
-        response = warehouse_bot_logic(prompt)
-        st.markdown(response)
-    st.session_state.messages.append({"role": "assistant", "content": response})
-`
-        }
-      }, document.getElementById("root"));
-    </script>
-  </body>
-</html>
+        "id": "location",
+        "keywords": ["
