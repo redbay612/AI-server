@@ -6,10 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>收多易客服小幫手</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.css" />
-    <style>
-      /* 這裡可以自定義載入畫面或背景 */
-      body { background-color: #f8f9fa; }
-    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -22,62 +18,47 @@
           "app.py": `
 import streamlit as st
 
-# --- 介面美化配置 ---
+# 1. 頁面基本設定
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# 自定義 CSS 美化介面
-st.markdown("""
-    <style>
-    .stApp {
-        max-width: 800px;
-        margin: 0 auto;
-    }
-    .main {
-        background-color: #ffffff;
-    }
-    .stButton>button {
-        width: 100%;
-        border-radius: 20px;
-        border: 1px solid #ff4b4b;
-        color: #ff4b4b;
-    }
-    .stButton>button:hover {
-        background-color: #ff4b4b;
-        color: white;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# --- 側邊欄：快速資訊與聯絡 ---
+# 2. 側邊欄資訊
 with st.sidebar:
-    st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=180)
-    st.title("松山據點資訊")
-    st.info("📍 台北市南港區八德路四段768巷5號2F-1")
-    st.success("📞 02-2653-3645")
-    st.warning("⏰ 平日專人接待: 10:00-19:00\\n🔑 租戶進出: 24H")
+    st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
+    st.markdown("### 📍 松山據點資訊")
+    st.caption("台北市南港區八德路四段768巷5號2F-1")
+    st.markdown("---")
+    st.markdown("🕒 **營業時間**\\n平日 10:00 - 19:00")
+    st.markdown("📞 **聯絡電話**\\n02-2653-3645")
     st.write("---")
-    st.markdown("### 快速連結")
-    st.link_button("🌐 收多易官網", "https://www.storeasy.com.tw")
     st.link_button("📊 線上租倉評估", "https://3-dstorage.vercel.app")
 
-# --- 資料庫邏輯優化 ---
-# 增加語義對映表，讓關鍵字抓取更精準
-faq_knowledge = [
-    {
-        "id": "rent_guide",
-        "keywords": ["租倉", "如何租", "怎麼租", "租賃", "租屋", "承租", "流程", "想租"],
-        "answer": "🏠 **如何租倉？**\\n\\n為了提供最精準的空間建議與報價，建議您先進行**線上空間評估**：\\n👉 [點此開始線上評估及導引](https://3-dstorage.vercel.app)\\n\\n**租倉三步驟：**\\n1. **線上評估**或現場看倉。\\n2. 準備**身分證件** (個人) 或 **公司大章** (企業)。\\n3. 簽約繳交首月租金及**兩個月押金**即可領卡進出。"
-    },
-    {
-        "id": "elevator",
-        "keywords": ["電梯", "貨梯", "搬運", "上樓", "下樓", "升降"],
-        "answer": "📦 **搬運設備服務：**\\n\\n您是在詢問如何將物品搬運至倉庫嗎？\\n- **專用貨梯**：店內配有大型貨梯 (135*180*205cm)，限重1000公斤。\\n- **升降設備**：租用上層倉庫客戶，現場備有**電動升降機**與推車，即使是高處存取也能輕鬆完成。"
-    },
-    {
-        "id": "24h",
-        "keywords": ["24小時", "半夜", "幾點", "進出", "時間", "全天"],
-        "answer": "🕒 **進出時間說明：**\\n\\n收多易松山據點對承租客戶提供 **24小時自由進出** 服務。\\n您只需使用感應卡或專屬 APP 即可開啟大門。\\n*(非營業時間若遇緊急狀況，請撥：0800-458-075)*"
-    },
-    {
-        "id": "location",
-        "keywords": ["
+# 3. 標題與美化
+st.title("🧡 收多易客服小幫手")
+st.markdown("##### 您的 24H 智能管家 | 專業倉儲諮詢")
+
+# 4. 資料庫邏輯
+def get_response(user_input):
+    ui = user_input.lower()
+    
+    # 租倉導流邏輯
+    if any(k in ui for k in ["租", "承租", "流程", "辦理", "想租"]):
+        return """🏠 **如何承租松山店？**
+為了提供最精準的空間建議與報價，建議您先進行線上空間評估：
+👉 [**點此開始線上評估及導引**](https://3-dstorage.vercel.app)
+
+**快速手續：**
+1. 準備身分證件(個人)或公司大章(企業)。
+2. 簽約繳交首月租金及兩個月押金即可領卡進出。"""
+
+    # 貨梯邏輯優化
+    if any(k in ui for k in ["電梯", "貨梯", "搬運", "樓", "升降", "推車"]):
+        return """📦 **搬運設備服務：**
+您是在詢問如何搬運物品嗎？
+- **專用貨梯**：店內配有大型貨梯 (135*180*205cm)，限重1000公斤。
+- **搬運工具**：現場提供**推車**、**電動升降機**，存取物品輕鬆省力。"""
+
+    # 24H 邏輯
+    if any(k in ui for k in ["24小時", "進出", "時間", "半夜", "幾點"]):
+        return "🕒 **進出時間：**\\n收多易松山據點對承租客戶提供 **24小時自由進出** 服務，持感應卡即可進入。"
+
+    # 位
