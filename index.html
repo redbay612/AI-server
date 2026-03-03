@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Storeasy AI 客服</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
+    <script>
+      stlite.mount({
+        requirements: ["streamlit"],
+        entrypoint: "app.py",
+        files: {
+          "app.py": `
+import streamlit as st
+import time
+
+faq_knowledge = [
+    {"category": "租賃流程", "keywords": ["怎麼租", "起租", "手續", "身分證"], "answer": "🔹 **起租流程**：請攜帶身分證件，現場簽約繳交首期租金及兩個月押金即可。"},
+    {"category": "安全", "keywords": ["進出", "時間", "24小時"], "answer": "🔹 **24小時進出**：使用專屬感應卡，隨時前來。"},
+    {"category": "環境", "keywords": ["除濕", "濕度", "發霉"], "answer": "🔹 **環境**：工業級除濕機，維持恆溫恆濕。"}
+]
+
+def warehouse_bot_logic(user_input):
+    user_input = user_input.lower()
+    for faq in faq_knowledge:
+        if any(kw in user_input for kw in faq["keywords"]):
+            return faq["answer"]
+    return "🤖 您好，我是 Storeasy AI 助手。您可以詢問關於租倉、費用、環境的問題。"
+
+st.title("🏢 Storeasy AI 智能管家")
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+if prompt := st.chat_input("請輸入問題..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    with st.chat_message("assistant"):
+        response = warehouse_bot_logic(prompt)
+        st.markdown(response)
+    st.session_state.messages.append({"role": "assistant", "content": response})
+`
+        }
+      }, document.getElementById("root"));
+    </script>
+  </body>
+</html>
