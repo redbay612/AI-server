@@ -5,10 +5,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <title>收多易客服小幫手</title>
+    <!-- 使用穩定的 stlite 版本 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.css" />
+    <style>
+      /* 讓載入時不要完全空白 */
+      #loading-msg {
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #666;
+      }
+    </style>
   </head>
   <body>
+    <div id="loading-msg">🤖 收多易小幫手正在啟動中，請稍候...</div>
     <div id="root"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
     <script>
       stlite.mount({
@@ -18,47 +32,111 @@
           "app.py": `
 import streamlit as st
 
-# 1. 頁面基本設定
+# --- 1. 頁面配置 ---
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# 2. 側邊欄資訊
+# --- 2. 側邊欄與標題 ---
 with st.sidebar:
     st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
     st.markdown("### 📍 松山據點資訊")
     st.caption("台北市南港區八德路四段768巷5號2F-1")
     st.markdown("---")
-    st.markdown("🕒 **營業時間**\\n平日 10:00 - 19:00")
-    st.markdown("📞 **聯絡電話**\\n02-2653-3645")
+    st.markdown("🕒 **營業時間**: 平日 10-19")
+    st.markdown("📞 **電話**: 02-2653-3645")
     st.write("---")
     st.link_button("📊 線上租倉評估", "https://3-dstorage.vercel.app")
 
-# 3. 標題與美化
 st.title("🧡 收多易客服小幫手")
 st.markdown("##### 您的 24H 智能管家 | 專業倉儲諮詢")
 
-# 4. 資料庫邏輯
-def get_response(user_input):
+# --- 3. 核心回覆邏輯 ---
+def get_ai_response(user_input):
     ui = user_input.lower()
     
-    # 租倉導流邏輯
-    if any(k in ui for k in ["租", "承租", "流程", "辦理", "想租"]):
-        return """🏠 **如何承租松山店？**
+    # 租倉優化 (包含網址導流)
+    if any(k in ui for k in ["租", "流程", "辦理", "線上評估", "想租"]):
+        return """🏠 **如何租倉？**
 為了提供最精準的空間建議與報價，建議您先進行線上空間評估：
-👉 [**點此開始線上評估及導引**](https://3-dstorage.vercel.app)
+👉 [**點此開啟：線上租倉評估導引**](https://3-dstorage.vercel.app)
 
-**快速手續：**
-1. 準備身分證件(個人)或公司大章(企業)。
-2. 簽約繳交首月租金及兩個月押金即可領卡進出。"""
+**租倉流程：**
+1. 準備證件(個人身分證或公司大章)。
+2. 簽約繳交首月租金及**兩個月押金**。
+3. 領取感應卡後即可 24H 進出。"""
 
-    # 貨梯邏輯優化
-    if any(k in ui for k in ["電梯", "貨梯", "搬運", "樓", "升降", "推車"]):
+    # 貨梯語義優化 (電梯=貨梯)
+    if any(k in ui for k in ["電梯", "貨梯", "搬運", "樓", "推車", "升降"]):
         return """📦 **搬運設備服務：**
-您是在詢問如何搬運物品嗎？
-- **專用貨梯**：店內配有大型貨梯 (135*180*205cm)，限重1000公斤。
-- **搬運工具**：現場提供**推車**、**電動升降機**，存取物品輕鬆省力。"""
+收多易松山店備有專業搬運設施：
+- **專用貨梯**：大型貨梯 (135*180*205cm)，限重1000公斤。
+- **電動升降機**：租用上層倉庫也能輕鬆存取物品。
+- **推車**：現場免費提供推車與梯子。"""
 
-    # 24H 邏輯
-    if any(k in ui for k in ["24小時", "進出", "時間", "半夜", "幾點"]):
-        return "🕒 **進出時間：**\\n收多易松山據點對承租客戶提供 **24小時自由進出** 服務，持感應卡即可進入。"
+    # 交通與停車
+    if any(k in ui for k in ["地址", "地點", "停車", "地圖", "交通", "怎麼去"]):
+        return """📍 **位置與停車：**
+地址：南港區八德路四段768巷5號2F-1。
+- **停車**：大樓 B2 設有專屬位 (27, 33, 41 號)。
+- **捷運**：松山站 4 號出口，步行 3 分鐘。
+🔗 [Google 地圖導引](https://maps.app.goo.gl/7PF1dey922GP5rhJ9)"""
 
-    # 位
+    # 進出時間
+    if any(k in ui for k in ["時間", "24小時", "半夜", "幾點"]):
+        return "🕒 **進出服務：**\\n租戶可持感應卡 **24小時** 自由進出據點，不受營業時間限制。"
+
+    # 價格
+    if any(k in ui for k in ["價格", "租金", "多少錢"]):
+        return "💰 **租金報價：**\\n租金依尺寸約 **$950 ~ $12,640**。建議使用 [線上評估工具](https://3-dstorage.vercel.app) 獲取最準確的預算。"
+
+    return "🤖 關於您的問題，您可以試著詢問：**租倉流程、貨梯設備、據點地址或租金價格**。"
+
+# --- 4. 聊天介面實作 ---
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+# 顯示對話紀錄
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+# 快速按鈕
+st.write("---")
+c1, c2 = st.columns(2)
+with c1:
+    if st.button("📝 我想租倉"):
+        st.session_state.prompt_queue = "如何租倉"
+with c2:
+    if st.button("🚚 查詢搬運設備"):
+        st.session_state.prompt_queue = "貨梯搬運"
+
+# 取得輸入
+user_query = st.chat_input("請輸入您的問題...")
+
+# 整合按鈕與手動輸入
+final_query = None
+if user_query:
+    final_query = user_query
+elif "prompt_queue" in st.session_state:
+    final_query = st.session_state.prompt_queue
+    del st.session_state.prompt_queue
+
+if final_query:
+    # 使用者訊息
+    st.session_state.messages.append({"role": "user", "content": final_query})
+    with st.chat_message("user"):
+        st.markdown(final_query)
+    
+    # 機器人回覆
+    with st.chat_message("assistant"):
+        ans = get_ai_response(final_query)
+        st.markdown(ans)
+    st.session_state.messages.append({"role": "assistant", "content": ans})
+`
+        }
+      }, document.getElementById("root")).then(() => {
+        // 載入完成後隱藏載入提示
+        document.getElementById('loading-msg').style.display = 'none';
+      });
+    </script>
+  </body>
+</html>
