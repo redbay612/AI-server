@@ -1,0 +1,7 @@
+{
+  "name": "Industry AI CS Architect",
+  "description": "A comprehensive guide and interactive builder for creating industry-specific AI customer service agents using Gemini technology.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
