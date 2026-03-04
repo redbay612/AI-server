@@ -18,7 +18,7 @@
     </style>
   </head>
   <body>
-    <div id="loading-msg">🤖 正在修復搜尋引擎，加載最新據點資料...</div>
+    <div id="loading-msg">🤖 正在優化南港據點資料庫，請稍候...</div>
     <div id="root"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
@@ -32,66 +32,67 @@ import streamlit as st
 
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# --- 1. 完整深度資料庫 ---
+# --- 1. 全域深度資料庫 (新增南港三店詳細數據) ---
 STORES_DB = [
-    {"name": "新竹中華店", "area": "新竹", "parking": "專屬停車場/卸貨區 (東區民權路24巷1號)，限臨停 30 分鐘", "elevator": "推車、梯車、電動升降機、車道直達據點", "addr": "新竹市東區中華路二段198號", "time": "已承租用戶可 24 小時進出", "pkg": "代收包裹: 有 (三邊總合 <= 200cm)", "box": "紙箱販售: 有 (小45/中55/大65)", "nearby": "步行1分內：蝦皮店到店、7-11、全家、萊爾富"},
-    {"name": "台中豐原店", "area": "台中", "parking": "設有停車場 (第1小時30元，續時15元/時)", "elevator": "配有貨梯及 1 台推車", "addr": "台中市豐原區向陽路265號2F", "time": "已承租用戶可 24 小時進出", "pkg": "代收包裹: 有 (三邊總合 <= 200cm)", "box": "紙箱販售: 有 (小45/中55/大65)", "nearby": "步行1分內：7-11門市"},
-    {"name": "台中青海店", "area": "台中", "parking": "家樂福 B2/3F/4F 停車場 (40元/時，可消費折抵)", "elevator": "配有貨梯及 1 台推車", "addr": "台中市西屯區青海路二段207-18號B1", "time": "10:00 - 22:00", "pkg": "代收包裹: 無", "box": "紙箱販售: 無", "nearby": "步行3分內：全家、7-11"},
-    {"name": "天母圓環店", "area": "士林", "parking": "大樓設有停車場 (08:00-10:30 提供1H折抵券)", "elevator": "配有貨梯、推車、梯車", "addr": "士林區中山北路七段154巷6號2樓", "time": "24H", "pkg": "代收包裹: 有", "box": "紙箱販售: 有", "nearby": "步行1分內：全家、7-11"},
-    {"name": "南東店", "area": "中山", "parking": "設有卸貨區 (請平停於斜坡上勿駛入)", "elevator": "貨梯 (開放 07:00-22:00)、推車、摺疊梯", "addr": "中山區吉林路26巷34號B1", "time": "24H", "pkg": "代收包裹: 有", "box": "紙箱販售: 有", "nearby": "全家、7-11"},
-    {"name": "台北車站店", "area": "中正", "parking": "許昌街停車場 B4/B5 (70元/時)", "elevator": "設有客用電梯及 2 台推車", "addr": "中正區忠孝西路一段50號B1", "time": "24H", "pkg": "代收包裹: 無", "box": "紙箱販售: 有", "nearby": "步行5分內：全家、7-11"},
-    {"name": "南港興華店", "area": "南港", "parking": "全聯 B2 停車場 (80元/時)，車道限高 180cm", "elevator": "設有客用電梯及 2 台推車", "addr": "南港區南港路二段20巷5號B2", "time": "08:00 - 23:00", "pkg": "代收包裹: 有", "box": "紙箱販售: 有", "nearby": "蝦皮店到店、郵局"},
-    {"name": "政大店", "area": "文山", "parking": "超市卸貨碼頭 (限臨停30分，09:00-21:00)", "elevator": "配有貨梯、推車、梯車、電動升降機", "addr": "文山區萬壽路27號2F", "time": "24H", "pkg": "代收包裹: 有", "box": "紙箱販售: 有", "nearby": "蝦皮、7-11、全家"},
-    {"name": "逸仙店", "area": "信義", "parking": "7號入口可臨停下貨，或停國父紀念館停車場 (40元/時)", "elevator": "配有貨梯、推車、電動升降機", "addr": "信義區逸仙路26巷1號B1", "time": "24H", "pkg": "代收包裹: 有", "box": "紙箱販售: 有", "nearby": "全家、7-11"}
+    # 南港區據點
+    {"name": "南港興華店", "area": "南港", "parking": "🅿️ 全聯地下停車場、車道直達入口", "elevator": "🛗 客用電梯、備有 2 台推車", "addr": "南港區南港路二段20巷5號B2", "time": "🕒 08:00-23:00", "price": "$1220 - $9680", "service": "📩 代收包裹、免費WiFi、紙箱販售、簡易作業區", "transit": "🚇 南港站步行 5 分鐘"},
+    {"name": "南港北流店", "area": "南港", "parking": "🅿️ 園區停車場 (1小時30元)", "elevator": "🛗 貨梯、推車(2台)、電動升降機", "addr": "南港區南港路二段99-5號", "time": "🕒 24小時自由進出 (門禁卡/APP)", "price": "$1790 - $11870", "service": "📩 代收包裹、免費WiFi、紙箱販售、簡易作業區", "transit": "🚌 公車東明里站步行 3 分鐘"},
+    {"name": "南港車站店", "area": "南港", "parking": "🅿️ 台鐵地下停車場", "elevator": "🛗 客用電梯、推車(每區1台)、摺疊梯", "addr": "南港區忠孝東路七段371號B1AF", "time": "🕒 A-K區 06:00-23:00 / L區 11:00-21:00", "price": "$1100 - $7200", "service": "📩 代收包裹、會議室出租、免費WiFi、紙箱販售", "transit": "🚇 南港車站(捷運/火車/高鐵) 步行 1 分鐘"},
+    
+    # 其他重點據點 (保留以便導購)
+    {"name": "新竹中華店", "area": "新竹", "parking": "🅿️ 專屬停車場/卸貨區 (限臨停30分)", "elevator": "🛗 貨梯、電動升降機", "addr": "新竹市東區中華路二段198號", "time": "🕒 24小時自由進出", "price": "$890 - $7860", "service": "📩 代收包裹、重機車位、營登登記", "transit": "🚌 國賓大飯店站即抵達"},
+    {"name": "台中豐原店", "area": "台中", "parking": "🅿️ 設有停車場 (第1小時30元)", "elevator": "🛗 配有貨梯、推車(1台)", "addr": "台中市豐原區向陽路265號2F", "time": "🕒 24小時自由進出", "price": "$1610 - $8100", "service": "📩 代收包裹、紙箱販售", "transit": "🚌 公車向陽路口站"},
+    {"name": "逸仙店", "area": "信義", "parking": "🅿️ 7號入口臨停下貨 / 國父紀念館停車場", "elevator": "🛗 貨梯、推車、電動升降機", "addr": "信義區逸仙路26巷1號B1", "time": "🕒 24小時自由進出", "price": "$620 - $17530", "service": "📩 代收包裹、紅酒櫃出租、紙箱販售", "transit": "🚇 國父紀念館/市政府站步行5分"}
 ]
 
-# --- 2. 智慧搜尋引擎 ---
+# --- 2. 核心搜尋與回覆邏輯 ---
 def handle_query(ui):
     ui = ui.lower().strip()
     
-    # 租倉流程
-    if any(k in ui for k in ["租", "辦理", "承租", "流程", "手續"]):
-        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約準備資料：**\\n- **個人戶**：準備**雙證件**及**悠遊卡**。\\n- **公司戶**：準備**商業登記表**、**負責人證件**及**悠遊卡**。\\n**辦理方式：** 請於營業時間前往櫃檯辦理。"""
+    # A. 租倉流程 (固定回覆最新政策)
+    if any(k in ui for k in ["租", "如何租", "手續", "辦理", "承租"]):
+        return """🏠 **如何租倉辦理？**
+建議先進行線上評估，獲取適合您的櫃型建議：
+👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)
 
-    # 識別目標據點 (支援模糊搜尋與地區搜尋)
-    target_stores = []
+**簽約準備資料：**
+- **個人戶**：請準備**雙證件**及**悠遊卡**。
+- **公司戶**：請準備**商業登記表**、**負責人證件**及**悠遊卡**。
+
+**辦理方式：**
+請於營業時間前往櫃檯辦理簽約登記。"""
+
+    # B. 智慧搜尋 (依據地區、店名或關鍵字)
+    matches = []
     for s in STORES_DB:
-        name_core = s['name'].replace("店","")
-        # 只要用戶輸入包含店名核心字，或者店名核心字包含在用戶輸入中，或地區符合
-        if name_core in ui or ui.startswith(name_core) or s['area'] in ui:
-            target_stores.append(s)
+        # 比對店名 或 地區標籤
+        if s['area'] in ui or s['name'].replace("店","").lower() in ui or ui in s['name'].lower():
+            res = f"🏠 **{s['name']}**\\n"
+            res += f"📍 地址: {s['addr']}\\n"
+            res += f"🕒 存取時間: {s['time']}\\n"
+            res += f"🚇 交通: {s['transit']}\\n"
+            res += f"🅿️ 停車: {s['parking']}\\n"
+            res += f"🛗 搬運: {s['elevator']}\\n"
+            res += f"💰 租金: {s['price']}\\n"
+            res += f"✨ 服務: {s['service']}"
+            matches.append(res)
+    
+    if matches:
+        return "🔍 為您找到以下相關據點資訊：\\n\\n" + "\\n\\n---\\n\\n".join(matches)
 
-    if target_stores:
-        response = ""
-        for s in target_stores:
-            # 根據意圖過濾回覆內容
-            if "停車" in ui:
-                response += f"🅿️ **{s['name']} 停車資訊：**\\n{s['parking']}\\n\\n"
-            elif "地址" in ui or "在哪" in ui or "位置" in ui:
-                response += f"📍 **{s['name']} 詳細地址：**\\n{s['addr']}\\n\\n"
-            elif "蝦皮" in ui or "寄貨" in ui or "便利商店" in ui or "附近" in ui:
-                response += f"🏪 **{s['name']} 周邊生活機能：**\\n{s['nearby']}\\n\\n"
-            else:
-                # 顯示完整懶人包
-                response += f"🏠 **{s['name']} 完整資訊摘要**\\n"
-                response += f"- **地址**: {s['addr']}\\n"
-                response += f"- **停車**: {s['parking']}\\n"
-                response += f"- **進出**: {s['time']}\\n"
-                response += f"- **周邊**: {s['nearby']}\\n"
-                response += f"- **設施**: {s['elevator']}\\n"
-                response += f"- **代收**: {s['pkg']}\\n\\n---\\n\\n"
-        return response
+    # C. 停車/搬運 通用引導
+    if any(k in ui for k in ["停車", "車位", "卸貨"]):
+        return "🚗 **收多易全台多數據點皆設有停車場或鄰近停車位。**\\n例如：**南港車站店**可停台鐵 B2，**興華店**有全聯 B2 位。請問您想了解哪間分店？"
+    
+    if any(k in ui for k in ["電梯", "貨梯", "搬運"]):
+        return "🛗 **收多易多數據點皆配有貨梯或客梯方便搬運。**\\n例如：**北流店**配有貨梯與電動升降機。請問您想查詢哪個據點？"
 
-    # 耗材
-    if any(k in ui for k in ["紙箱", "價格", "多少錢"]):
-        return "📦 **收多易紙箱價格**：\\n- 小型：$45\\n- 中型：$55\\n- 大型：$65\\n*現場皆有販售，數量有限建議先詢問各店。*"
-
-    return "🤖 您好！您可以輸入**地區或店名**(如: 南港、新竹、逸仙店) 或詢問 **新竹停車資訊、南港店地址、紙箱價格**。"
+    return "🤖 您好！您可以輸入**地區或店名**(如: 南港、新竹、逸仙店) 或詢問 **如何租倉、據點地址、停車資訊**。"
 
 # --- 3. 介面呈現 ---
 with st.sidebar:
-    st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
-    st.info("已修復：新竹、南港地區關鍵字無法識別的問題。")
+    st.markdown("### 🏢 收多易智能管家")
+    st.info("已更新南港區三店(興華、北流、車站)及外縣市據點深度資訊。")
     st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
 
 st.title("🧡 收多易客服小幫手")
@@ -103,10 +104,11 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if prompt := st.chat_input("請輸入您的問題 (例如：新竹停車、南港店地址...)"):
+if prompt := st.chat_input("例如：南港有哪些店？車站店地址？我想租倉？"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
+    
     with st.chat_message("assistant"):
         ans = handle_query(prompt)
         st.markdown(ans)
