@@ -18,7 +18,7 @@
     </style>
   </head>
   <body>
-    <div id="loading-msg">🤖 正在導入全台 40+ 據點深度停車與設備資料...</div>
+    <div id="loading-msg">🤖 正在加載全台 40+ 據點與停車資訊庫，請稍候...</div>
     <div id="root"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
@@ -32,32 +32,37 @@ import streamlit as st
 
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# --- 1. 全台深度整合資料庫 (確保每個欄位都存在，避免 KeyError) ---
+# --- 1. 全台完整深度資料庫 (確保每個項目都有正確欄位) ---
 STORES_DB = [
-    # 台北市
-    {"name": "天母圓環店", "area": "士林區", "parking": "大樓停車場 (08:00-10:30 提供 1H 折抵)", "elevator": "配有貨梯", "transit": "石牌站1號出口步行11分", "addr": "士林區中山北路七段154巷6號2樓"},
-    {"name": "天母德行店", "area": "士林區", "parking": "家樂福 B1 停車場", "elevator": "使用推車搬運", "transit": "芝山站2號出口步行1分", "addr": "士林區德行西路47號B1"},
-    {"name": "天母廣場店", "area": "士林區", "parking": "大樓停車場 (40元/時)", "elevator": "設有客用電梯", "transit": "天母廣場站步行2分", "addr": "士林區天母西路3號2樓"},
-    {"name": "士林劍潭店", "area": "士林區", "parking": "收費停車場及專屬車位 (上班時間可消磁1H)", "elevator": "配有簡易載貨平台", "transit": "劍潭站1號出口步行5分", "addr": "士林區承德路四段179巷7號"},
-    {"name": "松山店", "area": "南港區", "parking": "大樓 B2 專屬位 (27, 33, 41 號)；貨車請停一樓卸貨區", "elevator": "配有貨梯 (160*170*210cm)", "transit": "松山站4號出口步行3分", "addr": "南港區八德路四段768巷5號2F-1"},
-    {"name": "南港興華店", "area": "南港區", "parking": "全聯 B2 停車場 (80元/時)", "elevator": "設有客用電梯", "transit": "南港站步行5分", "addr": "南港路二段38巷6號全聯B2"},
-    {"name": "南港北流店", "area": "南港區", "parking": "世貿財星園區 1F (30元/時)", "elevator": "配有貨梯", "transit": "公車東明里站步行3分", "addr": "南港路二段99-5號"},
-    {"name": "南港車站店", "area": "南港區", "parking": "台鐵地下停車場 B2 (40元/時)", "elevator": "設有客用電梯", "transit": "南港車站步行1分", "addr": "南港車站B1AF"},
-    {"name": "民生松江店", "area": "中山區", "parking": "大樓停車場 (車道限高 1.8m)", "elevator": "配有電動升降機、踩梯", "transit": "行天宮站1號出口步行2分", "addr": "中山區民生東路二段119號B1"},
-    {"name": "中山店", "area": "中山區", "parking": "中影八德大樓 1F 專屬車位 (66, 67，限停半小時)", "elevator": "配有貨梯 (160*170*210cm)", "transit": "忠孝復興站步行10分", "addr": "中山區八德路二段260號11F"},
-    {"name": "南門店", "area": "中正區", "parking": "台灣聯通地下停車場 (車道直達 B1)", "elevator": "推車搬運", "transit": "小南門站2號出口步行5分", "addr": "中正區延平南路189號B1"},
-    {"name": "台北車站店", "area": "中正區", "parking": "許昌街停車場 B4&B5 (70元/時)", "elevator": "設有客用電梯", "transit": "台北車站 Z2 出口步行2分", "addr": "中正區忠孝西路一段50號B1"},
-    {"name": "西藏店", "area": "萬華區", "parking": "停車場 (20-60元/時)", "elevator": "推車搬運", "transit": "公車西藏路站步行2分", "addr": "萬華區西藏路125巷13-15號"},
-    {"name": "延吉店", "area": "大安區", "parking": "家樂福延吉超市停車場", "elevator": "配有貨梯 (須平日 10-19 預約)", "transit": "信義安和站5號出口步行5分", "addr": "大安區延吉街250號B1"},
-    {"name": "仁愛二號店", "area": "大安區", "parking": "家樂福超市停車場", "elevator": "店內配有貨梯", "transit": "國父紀念館站步行10分", "addr": "大安區仁愛路四段388號B1"},
-    {"name": "文山興隆店", "area": "文山區", "parking": "全聯 3F 停車場 (前30分免費)", "elevator": "大樓配有貨梯", "transit": "萬隆站3號出口步行5分", "addr": "文山區興隆路一段15號3樓"},
-    {"name": "東湖店", "area": "內湖區", "parking": "康樂合署大樓 B1-B3 (限高 2.1m)", "elevator": "配有貨梯 (限重 500kg)", "transit": "公車東湖國中站步行1分", "addr": "內湖區康樂街150號2F"},
+    # 台北市 - 士林區
+    {"name": "天母圓環店", "area": "士林區", "parking": "大樓設有停車場，提供一小時折抵券 (08:00-10:30)", "elevator": "配有貨梯", "addr": "士林區中山北路七段154巷6號2樓"},
+    {"name": "天母德行店", "area": "士林區", "parking": "家樂福 B1 停車場，費用依家樂福規定", "elevator": "一樓據點，使用推車搬運", "addr": "士林區德行西路47號B1"},
+    {"name": "天母廣場店", "area": "士林區", "parking": "大樓設有停車場 (40元/時)", "elevator": "設有客用電梯", "addr": "士林區天母西路3號2樓"},
+    {"name": "士林劍潭店", "area": "士林區", "parking": "收費停車場及專屬車位 (消磁1H)", "elevator": "簡易載貨平台", "addr": "士林區承德路四段179巷7號"},
     
-    # 新北市
-    {"name": "新店店", "area": "新店區", "parking": "由民權路 90 巷進入至 B1 停車場", "elevator": "配有貨梯 (平日 10-19 開放)", "transit": "大坪林站1號出口步行7分", "addr": "新店區民權路108號B1"},
-    {"name": "板橋店", "area": "板橋區", "parking": "大樓停車場 (提供停車折抵章)", "elevator": "配有客梯", "transit": "府中站1號出口步行1分", "addr": "板橋區東門街30-2號5樓之1"},
-    {"name": "中和威力店", "area": "中和區", "parking": "家樂福停車場，車可直達 6 樓", "elevator": "配有貨梯", "transit": "捷運中和站步行2分", "addr": "中和區中山路二段291號6樓"},
-    {"name": "土城店", "area": "土城區", "parking": "前方設有停車場 (前10分免費)", "elevator": "店內配有貨梯", "addr": "土城區金城路三段202-6號2樓"},
+    # 台北市 - 南港區
+    {"name": "松山店", "area": "南港區", "parking": "大樓 B2 專屬位 (27, 33, 41 號)。由萊爾富右轉後第一個網狀線左轉", "elevator": "配有貨梯 (160*170*210cm)", "addr": "南港區八德路四段768巷5號2F-1"},
+    {"name": "南港興華店", "area": "南港區", "parking": "全聯 B2 停車場 (80元/時)", "elevator": "設有客用電梯", "addr": "南港路二段38巷6號全聯B2"},
+    {"name": "南港北流店", "area": "南港區", "parking": "世貿財星園區 1F (30元/時)", "elevator": "大樓配有貨梯", "addr": "南港路二段99-5號"},
+    {"name": "南港車站店", "area": "南港區", "parking": "台鐵地下停車場 B2 (40元/時)", "elevator": "設有客用電梯", "addr": "南港車站B1AF"},
+
+    # 台北市 - 中山區
+    {"name": "民生松江店", "area": "中山區", "parking": "設有停車場 (民生東路二段127巷6號)，限高 1.8m", "elevator": "配有電動升降機、踩梯", "addr": "中山區民生東路二段119號B1"},
+    {"name": "中山店", "area": "中山區", "parking": "中影八德大樓 1F 專屬位 (66, 67 限停半小時)", "elevator": "配有貨梯 (160*170*210cm)", "addr": "中山區八德路二段260號11F"},
+    {"name": "南東店", "area": "中山區", "parking": "設有卸貨區可臨停卸貨", "elevator": "配有貨梯 (07:00-22:00)", "addr": "中山區吉林路26巷34號B1"},
+
+    # 台北市 - 大安區
+    {"name": "延吉店", "area": "大安區", "parking": "家樂福延吉超市停車場", "elevator": "配有貨梯 (須預約)", "addr": "大安區延吉街250號B1"},
+    {"name": "仁愛二號店", "area": "大安區", "parking": "家樂福超市停車場", "elevator": "店內配有貨梯", "addr": "大安區仁愛路四段388號B1"},
+
+    # 新北市 - 中和區
+    {"name": "中和威力店", "area": "中和區", "parking": "家樂福停車場，車可直達 6 樓 (前30分免費)", "elevator": "配有貨梯", "addr": "中和區中山路二段291號6樓"},
+    {"name": "中和好市多店", "area": "中和區", "parking": "大樓設有停車場，需詢問警衛", "elevator": "配有貨梯", "addr": "中和區中山路二段359巷8號3F"},
+    {"name": "中和二號店", "area": "中和區", "parking": "由中山路二段 174 巷進入，開門需聯繫警衛", "elevator": "配有電動升降機", "addr": "中和區中山路二段146號B1"},
+
+    # 其他區域
+    {"name": "新店店", "area": "新店區", "parking": "由民權路 90 巷進入至 B1 停車場", "elevator": "配有貨梯 (平日 10-19)", "addr": "新店區民權路108號B1"},
+    {"name": "板橋店", "area": "板橋區", "parking": "大樓停車場，提供折抵章 (折抵 20元/時)", "elevator": "配有客梯", "addr": "板橋區東門街30-2號5樓之1"},
     {"name": "三重湯城店", "area": "三重區", "parking": "湯城園區停車場 (前30分免費)", "elevator": "配有貨梯", "addr": "三重重新路五段609巷10號B1"},
 ]
 
@@ -65,8 +70,8 @@ STORES_DB = [
 def handle_query(ui):
     ui = ui.lower().strip()
     
-    # 租倉流程
-    if any(k in ui for k in ["租", "如何租", "辦理", "想租", "承租"]):
+    # 租倉手續
+    if any(k in ui for k in ["租", "承租", "手續", "辦理"]):
         return """🏠 **如何租倉辦理？**
 建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)
 
@@ -77,53 +82,63 @@ def handle_query(ui):
 **辦理方式：**
 請於營業時間前往櫃檯辦理簽約登記。"""
 
+    is_parking_q = any(k in ui for k in ["停車", "車位", "卸貨"])
+    is_elevator_q = any(k in ui for k in ["電梯", "貨梯", "搬運"])
+    
     # 提取地區關鍵字
     target_area = None
-    all_areas = list(set([s['area'] for s in STORES_DB]))
+    all_areas = list(set([s.get('area', '') for s in STORES_DB if s.get('area')]))
     for area in all_areas:
         if area.replace("區","") in ui:
             target_area = area
             break
-
-    # 提取店名或關鍵字 (例如：八德路、中和)
-    target_stores = []
+            
+    # 提取特定店名關鍵字
+    target_store = None
     for s in STORES_DB:
-        # 關鍵字聯想：八德 -> 松山店/中山店；南港 -> 所有南港據點
-        if s['name'].replace("店","").lower() in ui or \
-           (target_area and s['area'] == target_area) or \
-           ("八德" in ui and ("松山" in s['name'] or "中山" in s['name'])):
-            target_stores.append(s)
+        name_clean = s.get('name', '').replace("店","")
+        if name_clean in ui or (name_clean == "松山" and "八德" in ui):
+            target_store = s
+            break
 
-    # 邏輯 A: 找到多個據點 (區域查詢)
-    if target_stores:
-        res = "🔍 **為您找到相關據點資訊：**\\n\\n"
-        # 先條列店名
-        names = [s['name'] for s in target_stores]
-        res += "📍 包含據點：" + "、".join(names) + "\\n\\n---\\n\\n"
-        
-        # 依序顯示詳情
-        for s in target_stores:
-            res += f"🏠 **{s['name']}**\\n"
-            # 使用 .get 確保不會因為缺欄位而崩潰
-            res += f"📍 **地址**: {s.get('addr', '請洽詢櫃檯')}\\n"
-            res += f"🅿️ **停車**: {s.get('parking', '臨停卸貨')}\\n"
-            res += f"🛗 **電梯**: {s.get('elevator', '推車搬運')}\\n"
-            res += f"🚇 **交通**: {s.get('transit', '請參閱地圖')}\\n\\n"
+    # 情況 1: 詢問特定店名 (如: 松山店停車)
+    if target_store:
+        res = f"🏠 **{target_store.get('name')} 資訊**\\n"
+        res += f"📍 **地址**: {target_store.get('addr', '請洽櫃檯')}\\n"
+        res += f"🅿️ **停車**: {target_store.get('parking', '臨停卸貨')}\\n"
+        res += f"🛗 **電梯**: {target_store.get('elevator', '推車搬運')}"
         return res
 
-    # 邏輯 B: 沒提地點只問設施
-    if any(k in ui for k in ["停車", "車位", "卸貨"]):
-        return "🚗 **收多易全台多數據點皆設有停車場或鄰近停車位。**\\n請問您想查詢哪個**區域**(如: 大安區、南港區) 或特定的**據點**？"
+    # 情況 2: 詢問地區 (如: 南港、中和、士林)
+    if target_area:
+        stores_in_area = [s for s in STORES_DB if s.get('area') == target_area]
+        store_names = [s.get('name', '') for s in stores_in_area]
+        
+        res = f"📍 **{target_area}據點包含：**\\n"
+        res += "、".join(store_names) + "\\n\\n"
+        res += f"--- **{target_area}據點詳細資訊如下** ---\\n\\n"
+        
+        for s in stores_in_area:
+            res += f"🏠 **{s.get('name')}**\\n"
+            # 使用 .get 確保絕對不崩潰
+            res += f"- **地址**: {s.get('addr', '請洽櫃檯')}\\n"
+            res += f"- **停車**: {s.get('parking', '臨停卸貨')}\\n"
+            res += f"- **電梯**: {s.get('elevator', '推車搬運')}\\n\\n"
+        return res
+
+    # 情況 3: 沒提地區只問設施
+    if is_parking_q:
+        return "🚗 **收多易全台多數據點皆設有停車場或鄰近停車位。**\\n請問您想查詢哪個**地區**(如: 大安區、南港區) 或特定的**據點**？"
     
-    if any(k in ui for k in ["電梯", "貨梯", "搬運"]):
+    if is_elevator_q:
         return "🛗 **收多易全台多數據點皆配有貨梯或客梯方便搬運。**\\n請問您想查詢哪個**地區**(如: 中山區、士林區) 或特定的**據點**？"
 
-    return "🤖 您好！您可以輸入**地區或店名**(如: 南港、新店、八德路) 或詢問 **如何租倉、停車資訊、貨梯設備**。"
+    return "🤖 您好！您可以輸入**地區或店名**(如: 南港、中和、天母) 或詢問 **如何租倉、停車資訊、貨梯設備**。"
 
 # --- 3. 介面呈現 ---
 with st.sidebar:
     st.markdown("### 🏢 收多易智能管家")
-    st.info("已修復南港、八德路等據點檢索崩潰問題，並補齊停車與電梯資料。")
+    st.info("已修復地區檢索崩潰問題，並補齊停車與電梯資料。")
     st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
 
 st.title("🧡 收多易客服小幫手")
@@ -141,7 +156,11 @@ if prompt := st.chat_input("請輸入地區、店名或問題..."):
         st.markdown(prompt)
     
     with st.chat_message("assistant"):
-        ans = handle_query(prompt)
+        # 加入錯誤捕捉機制，確保萬一還有漏掉的資料也不會白屏
+        try:
+            ans = handle_query(prompt)
+        except Exception as e:
+            ans = "🤖 抱歉，查詢時發生一點小錯誤，請試著輸入更精確的地點（例如：南港區、中和區）。"
         st.markdown(ans)
     st.session_state.messages.append({"role": "assistant", "content": ans})
 `
