@@ -18,7 +18,7 @@
     </style>
   </head>
   <body>
-    <div id="loading-msg">🤖 正在讀取全台 40+ 據點與停車資料中...</div>
+    <div id="loading-msg">🤖 收多易小幫手資料庫讀取中...</div>
     <div id="root"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
@@ -58,15 +58,16 @@ WMS_DB = {
 def handle_query(ui):
     ui = ui.lower()
     
-    # A. 租倉流程
+    # A. 租倉流程 (依照客戶要求更新)
     if any(k in ui for k in ["租", "如何租", "承租"]):
         return """🏠 **如何租倉辦理？**
-建議先進行：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)
+為了提供最精準的建議，建議先進行：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)
 
 **簽約準備資料：**
 1. **個人戶**：請準備**雙證件**及**悠遊卡**。
 2. **公司戶**：請準備**商業登記表**、**負責人證件**及**悠遊卡**。
 
+**辦理方式：**
 請於**營業時間**前往櫃檯辦理簽約登記。"""
 
     # B. 營登查詢
@@ -77,7 +78,7 @@ def handle_query(ui):
     matches = []
     for name, info in WMS_DB.items():
         # 如果用戶輸入包含 店名 或 區域關鍵字
-        if any(keyword in ui for keyword in name.replace("店","").split()) or any(area in ui for area in info['area'].split(',')):
+        if any(keyword in ui for keyword in name.replace("店","").lower().split()) or any(area in ui for area in info['area'].split(',')):
             res = f"📍 **{name}**\\n"
             res += f"- **地址**: {info['addr']}\\n"
             res += f"- **停車/卸貨**: {info['parking']}\\n"
@@ -92,13 +93,14 @@ def handle_query(ui):
     if any(k in ui for k in ["停車", "卸貨", "車位"]):
         return "🚗 **請問您想查詢哪個據點的停車資訊？**\\n(例如輸入：松山停車、新店停車、台中停車)"
 
-    return "🤖 您好！您可以輸入**地區名**(如: 台北、新店、台中) 或詢問 **租倉手續、營業登記**。\\n如果是特定詢問，請加上地區，例如：**『松山停車場在哪？』**"
+    return "🤖 您好！您可以輸入**地區名**(如: 台北、新店、中和、台中) 或詢問 **租倉手續、營業登記**。\\n如果是特定詢問，請加上地區，例如：**『松山停車場在哪？』**"
 
 # --- 3. 介面呈現 ---
 with st.sidebar:
     st.markdown("### 🏢 收多易智能客服")
     st.info("已更新全台據點之地址、停車及進出時間資料。")
-    st.link_button("📊 線上租倉評估", "https://3-dstorage.vercel.app")
+    # 修正：改用 Markdown 連結代替 link_button
+    st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
 
 st.title("🧡 收多易客服小幫手")
 
