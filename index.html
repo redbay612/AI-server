@@ -18,7 +18,7 @@
     </style>
   </head>
   <body>
-    <div id="loading-msg">🤖 正在配置精確檢索系統，請稍候...</div>
+    <div id="loading-msg">🤖 正在載入全台 58 個據點深度資料庫 (涵蓋所有地區)...</div>
     <div id="root"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
@@ -32,85 +32,170 @@ import streamlit as st
 
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# --- 1. 資料庫配置 ---
+# 初始化對話模式
+if "mode" not in st.session_state:
+    st.session_state.mode = None
+
+# --- 1. 全台 58 據點深度資料庫 (完整版) ---
 STORES_DB = [
-    {"name": "松山店", "area": "南港區", "tags": ["松山", "八德路"], "addr": "南港區八德路四段768巷5號2F-1", "parking": "🅿️ 大樓 B2 專屬位 (27, 33, 41 號)", "elevator": "🛗 貨梯 (160*170*210cm)", "time": "24H"},
-    {"name": "南港車站店", "area": "南港區", "tags": ["車站", "高鐵"], "addr": "南港區忠孝東路七段371號B1AF", "parking": "🅿️ 台鐵地下停車場 B2", "elevator": "🛗 客用電梯、各區推車", "time": "06:00-23:00"},
-    {"name": "南港北流店", "area": "南港區", "tags": ["北流"], "addr": "南港區南港路二段99-5號", "parking": "🅿️ 園區停車場 (1小時30元)", "elevator": "🛗 貨梯、電動升降機", "time": "24H"},
-    {"name": "南港興華店", "area": "南港區", "tags": ["興華", "全聯"], "addr": "南港路二段20巷5號B2", "parking": "🅿️ 全聯地下停車場 B2", "elevator": "🛗 客用電梯、推車(2台)", "time": "08:00-23:00"},
-    {"name": "內湖家樂福店", "area": "內湖區", "tags": ["內湖", "家樂福", "民善"], "addr": "內湖區民善街88號4F", "parking": "🅿️ 家樂福 B1/1F 停車場 (可折抵)", "elevator": "🛗 配有貨梯", "time": "09:00-22:00"},
-    {"name": "東湖店", "area": "內湖區", "tags": ["東湖", "康樂"], "addr": "內湖區康樂街150號2F", "parking": "🅿️ 停車場限高 2.1m", "elevator": "🛗 貨梯 (限重 500kg)", "time": "24H"},
-    {"name": "中和威力店", "area": "中和區", "tags": ["威力"], "addr": "中和區中山路二段291號6樓", "parking": "🅿️ 停車場可直達 6 樓", "elevator": "🛗 貨梯、推車", "time": "08:00-24:00"},
+    # 新竹
+    {"name": "新竹中華店", "area": "新竹市", "tags": ["新竹", "中華", "東區"], "addr": "新竹市東區中華路二段198號", "time": "24H", "parking": "專屬停車場/卸貨區 (東區民權路24巷1號)，限臨停30分鐘", "elevator": "推車(2台)、梯車、電動升降機、車道直達", "pkg": "有", "box": "有販售 (小45/中55/大65元)", "other": "營登、辦公室、重機車位、免費WIFI、洗手間"},
+    # 台中
+    {"name": "台中豐原店", "area": "台中市", "tags": ["台中", "豐原", "向陽"], "addr": "台中市豐原區向陽路265號2F", "time": "24H", "parking": "設有停車場 (每小時15-30元)", "elevator": "貨梯、推車(1台)", "pkg": "有", "box": "有販售 (小45/中55/大65元)", "other": "免費WIFI、作業區、洗手間"},
+    {"name": "台中青海店", "area": "台中市", "tags": ["台中", "青海", "西屯"], "addr": "台中市西屯區青海路二段207-18號B1", "time": "10:00-22:00", "parking": "家樂福停車場 (40元/時，可折抵)", "elevator": "貨梯、推車(1台)", "pkg": "無", "box": "無販售", "other": "免費WIFI"},
+    {"name": "台中中港店", "area": "台中市", "tags": ["台中", "中港", "台灣大道"], "addr": "台中市西區台灣大道二段16號10樓", "time": "24H", "parking": "大樓後門卸貨區或對面付費停車場", "elevator": "貨梯、推車(2台)、電動升降機", "pkg": "有", "box": "有販售 (小45/中55/大65元)", "other": "營登、作業區、免費WIFI、洗手間"},
+    {"name": "台中英士店", "area": "台中市", "tags": ["台中", "英士", "光大"], "addr": "台中市西區英士路71號", "time": "24H", "parking": "可臨停於正門口", "elevator": "貨梯、推車(2台)、摺疊梯", "pkg": "有", "box": "有販售 (小45/中55/大65元)", "other": "作業區、免費WIFI、洗手間"},
+    # 台北市 (士林)
+    {"name": "天母圓環店", "area": "台北市/士林區", "tags": ["天母", "士林", "中山北"], "addr": "台北市士林區中山北路七段154巷6號2樓", "time": "24H", "parking": "大樓停車場 (提供1小時折抵券)", "elevator": "貨梯、推車、梯車", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "天母德行店", "area": "台北市/士林區", "tags": ["天母", "士林", "德行", "芝山"], "addr": "台北市士林區德行西路47號B1", "time": "08:00-23:00", "parking": "家樂福停車場 (車道直達)", "elevator": "推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI、洗手間"},
+    {"name": "天母廣場店", "area": "台北市/士林區", "tags": ["天母", "士林", "天母西路"], "addr": "台北市士林區天母西路3號2樓", "time": "08:00-24:00", "parking": "大樓停車場 (40元/時)", "elevator": "客用電梯、推車(1台)", "pkg": "無", "box": "無販售", "other": "會議室、WIFI"},
+    {"name": "士林劍潭店", "area": "台北市/士林區", "tags": ["士林", "劍潭", "承德路"], "addr": "台北市士林區承德路四段179巷7號", "time": "24H", "parking": "收費停車場及專屬車位 (上班時間可消磁1H)", "elevator": "簡易載貨平台、推車(2台)", "pkg": "有", "box": "有販售", "other": "辦公室、營登、作業區、WIFI"},
+    # 台北市 (中山)
+    {"name": "民生松江店", "area": "台北市/中山區", "tags": ["民生", "松江", "行天宮"], "addr": "台北市中山區民生東路二段119號B1", "time": "06:00-22:00", "parking": "設有停車場 (車道限高1.8m)", "elevator": "車道直達、電動升降機、推車(2台)", "pkg": "有", "box": "有販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "南東店", "area": "台北市/中山區", "tags": ["南東", "吉林路", "松江南京"], "addr": "台北市中山區吉林路26巷34號B1", "time": "24H", "parking": "設有卸貨區 (吉林路26巷34號斜對面)", "elevator": "貨梯 (07:00-22:00)、推車(2台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI"},
+    {"name": "中山店", "area": "台北市/中山區", "tags": ["中山", "八德路", "中影"], "addr": "台北市中山區八德路二段260號11F", "time": "24H", "parking": "中影八德大樓1F停車場 (車位66,67，限30分鐘)", "elevator": "貨梯(160*170*210cm)、推車(2台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    # 台北市 (大安)
+    {"name": "延吉店", "area": "台北市/大安區", "tags": ["延吉", "信義安和"], "addr": "台北市大安區延吉街250號B1", "time": "07:00-24:00", "parking": "鄰近路邊停車格", "elevator": "貨梯(需預約)、推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI"},
+    {"name": "仁愛二店", "area": "台北市/大安區", "tags": ["仁愛", "國父紀念館"], "addr": "台北市大安區仁愛路四段388號B1", "time": "07:00-24:00", "parking": "鄰近路邊停車格", "elevator": "貨梯、推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI"},
+    {"name": "仁愛圓環店", "area": "台北市/大安區", "tags": ["仁愛", "圓環", "忠孝敦化"], "addr": "台北市大安區仁愛路四段50-99號", "time": "08:00-24:00", "parking": "鄰近停車場 (應安168)", "elevator": "推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI"},
+    {"name": "新生南店", "area": "台北市/大安區", "tags": ["新生南", "龍安國小"], "addr": "台北市大安區新生南路3段2號B1", "time": "07:00-24:00", "parking": "周邊機車停車格", "elevator": "貨梯(需預約)、推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI"},
+    {"name": "忠孝二號店", "area": "台北市/大安區", "tags": ["忠孝復興"], "addr": "台北市大安區忠孝東路3段218號B1", "time": "07:00-24:00", "parking": "正義國宅停車場或路邊卸貨格", "elevator": "推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI"},
+    # 台北市 (中正)
+    {"name": "南門店", "area": "台北市/中正區", "tags": ["南門", "延平南路"], "addr": "台北市中正區延平南路189號B1", "time": "24H", "parking": "台灣聯通停車場 (B1直達)", "elevator": "車道直達、推車(2台)", "pkg": "有", "box": "有販售", "other": "共同工作空間、WIFI、洗手間"},
+    {"name": "台北車站店", "area": "台北市/中正區", "tags": ["台北車站", "忠孝西路"], "addr": "台北市中正區忠孝西路一段50號B1", "time": "24H", "parking": "許昌街停車場 (B4&B5，70元/時)", "elevator": "客用電梯、推車(2台)", "pkg": "無", "box": "有販售", "other": "營登、WIFI、洗手間"},
+    # 台北市 (萬華)
+    {"name": "西藏店", "area": "台北市/萬華區", "tags": ["西藏路"], "addr": "台北市萬華區西藏路125巷13-15號", "time": "24H", "parking": "中華路二段364巷停車場", "elevator": "推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI"},
+    # 台北市 (內湖)
+    {"name": "內湖家樂福店", "area": "台北市/內湖區", "tags": ["內湖", "家樂福", "民善"], "addr": "台北市內湖區民善街88號4F", "time": "09:00-22:00", "parking": "家樂福停車場 (提供1小時折抵)", "elevator": "貨梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "簡易打包工具、WIFI、洗手間"},
+    {"name": "東湖店", "area": "台北市/內湖區", "tags": ["東湖", "康樂街"], "addr": "台北市內湖區康樂街150號2F", "time": "24H", "parking": "康樂合署大樓停車場 (B1-B3，限高2.1m)", "elevator": "貨梯(限重500kg)、推車(2台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "東湖二號店", "area": "台北市/內湖區", "tags": ["東湖", "東湖路"], "addr": "台北市內湖區東湖路69號B1", "time": "09:00-22:00", "parking": "路邊停車格/臨停區", "elevator": "貨梯 (需預約由家樂福人員操作)", "pkg": "無", "box": "無販售", "other": "WIFI、洗手間"},
+    # 台北市 (南港)
+    {"name": "松山店", "area": "台北市/南港區", "tags": ["松山", "八德路", "南港"], "addr": "南港區八德路四段768巷5號2F-1", "time": "24H", "parking": "大樓 B2 專屬位 (27, 33, 41 號)；貨車請停一樓卸貨區", "elevator": "貨梯 (160*170*210cm)、電動升降機", "pkg": "有", "box": "有販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "南港興華店", "area": "台北市/南港區", "tags": ["南港", "興華", "全聯"], "addr": "南港路二段20巷5號B2", "time": "08:00-23:00", "parking": "全聯地下停車場 B2", "elevator": "客用電梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "南港北流店", "area": "台北市/南港區", "tags": ["南港", "北流", "音樂中心"], "addr": "南港路二段99-5號", "time": "24H", "parking": "園區停車場 (1小時30元)", "elevator": "貨梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "南港車站店", "area": "台北市/南港區", "tags": ["南港", "車站", "高鐵", "捷運"], "addr": "忠孝東路七段371號B1AF", "time": "A-K區 06:00-23:00 / L區 11:00-21:00", "parking": "台鐵地下停車場 B2", "elevator": "客用電梯、推車", "pkg": "有", "box": "有販售", "other": "會議室、WIFI、洗手間"},
+    # 台北市 (文山)
+    {"name": "文山興隆店", "area": "台北市/文山區", "tags": ["文山", "興隆", "萬隆"], "addr": "興隆路一段15號3樓", "time": "24H", "parking": "全聯3F停車場 (前30分免費) 及門口卸貨區", "elevator": "貨梯、推車(2台)", "pkg": "無", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "政大店", "area": "台北市/文山區", "tags": ["政大", "萬壽路"], "addr": "萬壽路27號2F", "time": "24H", "parking": "卸貨區 (Mia C'bon卸貨碼頭，限30分鐘)", "elevator": "貨梯、推車(2台)、電動升降機", "pkg": "有", "box": "有販售", "other": "打包工具、WIFI、洗手間"},
+    
+    # 新北市 (土城/淡水/永和/板橋/新店/三重/中和/新莊)
+    {"name": "土城店", "area": "新北市/土城區", "tags": ["土城", "金城路"], "addr": "金城路三段202-6號2樓", "time": "24H", "parking": "前方設有停車場 (前10分鐘免費)", "elevator": "貨梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "淡水竹圍店", "area": "新北市/淡水區", "tags": ["淡水", "竹圍"], "addr": "民權路27號4F之5", "time": "24H", "parking": "大樓停車場 (4F專屬車位)", "elevator": "客用電梯、推車(2台)、車道直達", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "永和店", "area": "新北市/永和區", "tags": ["永和", "樂華夜市"], "addr": "永平路82號B1", "time": "24H", "parking": "B1可臨停卸貨 (避開夜市時間)", "elevator": "車道直達、推車(2台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "板橋店", "area": "新北市/板橋區", "tags": ["板橋", "府中"], "addr": "東門街30-2號5樓之1", "time": "24H", "parking": "大樓停車場 (提供每小時折抵20元)", "elevator": "客梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "新店店", "area": "新北市/新店區", "tags": ["新店", "大坪林"], "addr": "民權路108號B1", "time": "24H", "parking": "新店迷你倉停車場 (由民權路90巷入)", "elevator": "貨梯 (10-19)、推車(2台)", "pkg": "有", "box": "有販售", "other": "營登、WIFI、洗手間"},
+    {"name": "新店民族店", "area": "新北市/新店區", "tags": ["新店", "民族路"], "addr": "民族路B1", "time": "24H", "parking": "鄰近大豐悠活停車場", "elevator": "推車(1台)", "pkg": "無", "box": "無提供現場販售", "other": "WIFI"},
+    {"name": "三重光復店", "area": "新北市/三重區", "tags": ["三重", "光復路"], "addr": "光復路一段85號9樓", "time": "24H", "parking": "設有停車場 (30分鐘免費)", "elevator": "客用電梯(2台)、推車(1台)", "pkg": "有", "box": "有販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "三重湯城店", "area": "新北市/三重區", "tags": ["三重", "湯城"], "addr": "重新路五段609巷10號B1", "time": "24H", "parking": "湯城園區平面停車位 (30分鐘免費)", "elevator": "貨梯、推車(1台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "中和威力店", "area": "新北市/中和區", "tags": ["中和", "威力"], "addr": "中山路二段291號6樓", "time": "08:00-24:00", "parking": "家樂福停車場 (車可直達6樓)", "elevator": "貨梯、推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI、洗手間"},
+    {"name": "中和好市多店", "area": "新北市/中和區", "tags": ["中和", "好市多"], "addr": "中山路二段359巷8號3F", "time": "24H", "parking": "大樓設有停車場", "elevator": "貨梯、推車(1台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "中和立德店", "area": "新北市/中和區", "tags": ["中和", "立德街"], "addr": "立德街211號3樓", "time": "24H", "parking": "設有停車場 (車位進入後左邊第二個)", "elevator": "貨梯、推車(1台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "中和二號店", "area": "新北市/中和區", "tags": ["中和", "二號"], "addr": "中山路二段146號B1", "time": "24H", "parking": "地下停車場 (車道限高2m)", "elevator": "車道直達、推車(1台)", "pkg": "有", "box": "有販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "中和環球店", "area": "新北市/中和區", "tags": ["中和", "環球"], "addr": "中山路三段110號8樓", "time": "24H", "parking": "設有停車場 (30分鐘內免費)", "elevator": "貨梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "新莊昌隆店", "area": "新北市/新莊區", "tags": ["新莊", "昌隆街"], "addr": "昌隆街69號", "time": "24H", "parking": "鄰近聯通收費停車場", "elevator": "位於一樓，推車(1台)", "pkg": "無", "box": "無販售", "other": "作業區、WIFI"},
+    # 基隆市
+    {"name": "基隆北站店", "area": "基隆市", "tags": ["基隆", "北站"], "addr": "仁愛區港西街55號B1", "time": "05:00-24:00", "parking": "基隆火車站南站停車場", "elevator": "客用電梯、推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI、洗手間"},
+    # 桃園市
+    {"name": "桃園經國店", "area": "桃園市", "tags": ["桃園", "經國路"], "addr": "桃園區經國路369號", "time": "24H", "parking": "家樂福停車場 (消費可折抵)", "elevator": "貨梯、推車(1台)", "pkg": "無", "box": "無販售", "other": "WIFI、洗手間"},
+    {"name": "桃園中壢店", "area": "桃園市", "tags": ["桃園", "中壢", "中山東路"], "addr": "中壢區中山東路二段510號B1", "time": "08:00-23:00", "parking": "家樂福停車場 (B1據點門口可臨停)", "elevator": "車道直達(限高1.9m)、推車(2台)", "pkg": "有", "box": "有販售", "other": "打包工具、WIFI、洗手間"},
+    {"name": "桃園中正店", "area": "桃園市", "tags": ["桃園", "中正路"], "addr": "桃園區中正路366號", "time": "24H", "parking": "中正一街停車場", "elevator": "貨梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "桃園春日店", "area": "桃園市", "tags": ["桃園", "春日路"], "addr": "桃園區春日路69-1號3樓", "time": "24H", "parking": "東門市場停車場 (鎮安街入口)", "elevator": "貨梯、推車(2台)", "pkg": "有", "box": "有販售", "other": "會議室、作業區、WIFI、洗手間"},
+    {"name": "桃園新富店", "area": "桃園市", "tags": ["桃園", "新富", "平鎮"], "addr": "平鎮區新富五街66號2樓", "time": "24H", "parking": "市場全聯停車場", "elevator": "貨梯、推車(1台)", "pkg": "有", "box": "無販售", "other": "打包工具、WIFI、洗手間"},
+    {"name": "桃園南崁店", "area": "桃園市", "tags": ["桃園", "南崁", "蘆竹"], "addr": "蘆竹區桃園街118號B1", "time": "24H", "parking": "家樂福停車場", "elevator": "客用電梯、推車(1台)", "pkg": "有", "box": "有販售", "other": "作業區、WIFI、洗手間"},
+    # 台南市
+    {"name": "台南民生店", "area": "台南市", "tags": ["台南", "民生路"], "addr": "台南市中西區民生路二段72號B1", "time": "24H", "parking": "168Parking 國華室內停車場 (B1直達)", "elevator": "貨梯、推車(1台)", "pkg": "有", "box": "無販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "台南安平店", "area": "台南市", "tags": ["台南", "安平", "中華西路"], "addr": "台南市中西區中華西路二段16號", "time": "24H", "parking": "家樂福停車場", "elevator": "位於一樓，推車(2台)", "pkg": "無", "box": "無販售", "other": "WIFI、洗手間"},
+    # 高雄市
+    {"name": "高雄苓雅中正一店", "area": "高雄市", "tags": ["高雄", "苓雅", "中正路"], "addr": "高雄市苓雅區中正一路374號2樓", "time": "24H", "parking": "全聯停車場 (30分鐘內免費)", "elevator": "貨梯、推車(1台)", "pkg": "有", "box": "無販售", "other": "打包工具、WIFI、洗手間"},
+    {"name": "高雄復興店", "area": "高雄市", "tags": ["高雄", "復興", "新興"], "addr": "高雄市新興區復興一路80號4樓", "time": "24H", "parking": "B1停車場 (前30分鐘免費)", "elevator": "客梯、推車(2台)", "pkg": "有", "box": "無販售", "other": "作業區、WIFI、洗手間"},
+    {"name": "高雄九如店", "area": "高雄市", "tags": ["高雄", "九如", "三民"], "addr": "高雄市三民區九如一路960號", "parking": "B2停車場", "elevator": "電梯、推車(2台)", "pkg": "有", "box": "無販售", "other": "營登、作業區、WIFI、洗手間"},
+    {"name": "高雄博愛店", "area": "高雄市", "tags": ["高雄", "博愛", "後驛"], "addr": "高雄市三民區博愛一路372號9樓", "time": "07:00-22:00", "parking": "鄰近松江街停車場", "elevator": "客梯、推車(2台)", "pkg": "有", "box": "無販售", "other": "作業區、WIFI、洗手間"},
 ]
 
+# --- 2. 核心搜尋引擎 ---
 def handle_query(ui):
-    ui = ui.lower().strip()
-    
-    # A. 租倉流程 (不變)
-    if any(k in ui for k in ["租", "如何租", "辦理", "承租", "手續"]):
-        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約資料：**\\n- **個人戶**：準備雙證件及悠遊卡。\\n- **公司戶**：準備商登表、負責人證件及悠遊卡。\\n辦理請於營業時間前往櫃檯。"""
+    raw_ui = ui.lower()
+    # 清理常用贅字，方便匹配店名核心或地區
+    clean_ui = raw_ui.replace("店", "").replace("區", "").replace("倉庫", "").replace("資訊", "").replace("查詢", "").strip()
 
-    # B. 設施意圖識別
+    # A. 檢測特殊意圖 (停車/電梯)
     current_intent = None
-    if any(k in ui for k in ["停車", "車位", "卸貨"]): current_intent = "parking"
-    if any(k in ui for k in ["貨梯", "電梯", "搬運"]): current_intent = "elevator"
-
-    # C. 精確店名匹配
-    # 檢查是否直接叫出了完整店名 (例如: "松山店")
-    exact_match = None
-    for s in STORES_DB:
-        if s['name'].lower() in ui or (s['name'].replace("店","") in ui and len(ui) > 2):
-            exact_match = s
-            break
+    if any(k in raw_ui for k in ["停車", "車位", "卸貨"]): current_intent = "parking"
+    if any(k in raw_ui for k in ["電梯", "貨梯", "搬運"]): current_intent = "elevator"
     
-    if exact_match:
-        # 如果找到明確據點，只回覆該店
-        res = f"🏠 **{exact_match['name']} 資訊**\\n"
-        if current_intent == "parking":
-            res += f"🅿️ **停車**: {exact_match['parking']}\\n📍 地址: {exact_match['addr']}"
-        elif current_intent == "elevator":
-            res += f"🛗 **搬運**: {exact_match['elevator']}\\n📍 地址: {exact_match['addr']}"
-        else:
-            res += f"📍 地址: {exact_match['addr']}\\n🅿️ 停車: {exact_match['parking']}\\n🛗 搬運: {exact_match['elevator']}\\n🕒 進出: {exact_match['time']}"
-        return res
+    # B. 租倉手續 (優先回覆)
+    if any(k in raw_ui for k in ["租", "如何租", "手續", "辦理", "承租"]):
+        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約資料：**\\n1. **個人戶**：準備**雙證件**及**悠遊卡**。\\n2. **公司戶**：準備**商業登記表**、**負責人證件**及**悠遊卡**。\\n**辦理方式：** 請於營業時間前往櫃檯辦理。"""
 
-    # D. 區域模糊搜尋 (如果沒叫出確切店名)
-    area_matches = []
-    # 提取所有區域名稱 (如: 南港、內湖)
-    all_regions = list(set([s['area'].replace("區","") for s in STORES_DB]))
-    target_region = None
-    for reg in all_regions:
-        if reg in ui:
-            target_region = reg
+    # C. 搜尋邏輯 (優先匹配精確店名，再匹配區域)
+    matched_stores = []
+    
+    # 1. 嘗試精確匹配店名 (例如 "內湖家樂福" vs "內湖")
+    found_exact_store = False
+    for s in STORES_DB:
+        if clean_ui == s['name'].lower().replace("店",""): # 完整店名匹配
+            matched_stores.append(s)
+            found_exact_store = True
             break
             
-    if target_region:
-        area_matches = [s for s in STORES_DB if target_region in s['area']]
-        
-    if area_matches:
-        res = f"🔍 **在 {target_region} 區域內為您找到以下據點：**\\n"
-        res += "📍 包含：" + "、".join([s['name'] for s in area_matches]) + "\\n\\n---\\n\\n"
-        for s in area_matches:
-            res += f"🏠 **{s['name']}**\\n"
-            if current_intent == "parking":
-                res += f"🅿️ **停車**: {s['parking']}\\n"
-            elif current_intent == "elevator":
-                res += f"🛗 **搬運**: {s['elevator']}\\n"
-            else:
-                res += f"📍 地址: {s['addr']}\\n🅿️ 停車: {s['parking']}\\n"
-            res += "\\n"
-        return res
+    # 2. 如果沒有精確匹配，則進行區域/標籤匹配
+    if not found_exact_store:
+        for s in STORES_DB:
+            if clean_ui in s['area'].lower() or any(tag in clean_ui for tag in s['tags']):
+                # 避免重複加入
+                if s not in matched_stores:
+                    matched_stores.append(s)
 
-    # E. 通用語句引導
+    # D. 回覆生成
+    if matched_stores:
+        res = ""
+        
+        # 如果是精確匹配單一據點，則直接給該據點資訊
+        if found_exact_store and len(matched_stores) == 1:
+            s = matched_stores[0]
+            res += f"🏠 **{s.get('name')} 據點資訊**\\n"
+            if current_intent == "parking": res += f"🅿️ **停車**: {s.get('parking', '請洽詢')}\\n"
+            elif current_intent == "elevator": res += f"🛗 **搬運**: {s.get('elevator', '請洽詢')}\\n"
+            else:
+                res += f"📍 **地址**: {s.get('addr', '請洽詢')}\\n"
+                res += f"🕒 **時間**: {s.get('time', '請洽詢')}\\n"
+                res += f"🅿️ **停車**: {s.get('parking', '請洽詢')}\\n"
+                res += f"🛗 **搬運**: {s.get('elevator', '請洽詢')}\\n"
+                res += f"📩 **代收**: {s.get('pkg', '請洽詢')}\\n"
+                res += f"📦 **紙箱**: {s.get('box', '請洽詢')}\\n"
+                res += f"✨ **其他**: {s.get('other', '無')}\\n"
+            return res
+        
+        # 否則 (區域查詢 或 多個模糊匹配)，則先條列再詳解
+        else:
+            names = [s['name'] for s in matched_stores]
+            res += f"🔍 **為您找到 {ui} 區域的據點：**\\n📍 " + "、".join(names) + "\\n\\n---\\n\\n"
+            
+            for s in matched_stores:
+                res += f"🏠 **{s.get('name')}**\\n"
+                if current_intent == "parking": res += f"🅿️ **停車**: {s.get('parking', '請洽詢')}\\n"
+                elif current_intent == "elevator": res += f"🛗 **搬運**: {s.get('elevator', '請洽詢')}\\n"
+                else:
+                    res += f"📍 地址: {s.get('addr', '請洽詢')}\\n"
+                    res += f"🅿️ 停車: {s.get('parking', '請洽詢')}\\n"
+                    res += f"🛗 搬運: {s.get('elevator', '請洽詢')}\\n"
+                    res += f"🕒 時間: {s.get('time', '請洽詢')}\\n"
+                res += "\\n"
+            return res
+
+    # E. 設施通用引導 (如果沒有匹配到任何據點)
     if current_intent == "parking":
         return "🚗 **收多易全台據點多設有停車場或鄰近停車位。**\\n請問您想查詢哪個**據點**(如: 松山店) 或 **區域**(如: 內湖、南港)？"
-    
-    return "🤖 您好！您可以輸入**特定據點**(如: 松山店) 或 **區域名稱**(如: 南港、內湖) 來獲取詳細的地址與設施資訊。"
+    if current_intent == "elevator":
+        return "🛗 **收多易全台據點多配有貨梯或客梯。**\\n請問您想查詢哪個**據點**(如: 中和威力店) 或 **區域**(如: 士林、中山)？"
+
+    return "🤖 您好！您可以輸入**據點名稱**(如: 內湖家樂福店) 或 **區域名稱**(如: 內湖、南港) 來獲取詳細資訊。"
 
 # --- 3. 介面呈現 ---
 with st.sidebar:
-    st.markdown("### 🏢 收多易智能管家")
-    st.info("已開啟精確導引模式：\\n1. 直接輸入店名可獲取單店資訊。\\n2. 輸入區域會列出該區所有店點。")
+    st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
+    st.markdown("### 🏢 收多易全台智能管家")
+    st.info("已全面優化全台 58 據點資料與搜尋邏輯。")
     st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
 
 st.title("🧡 收多易客服小幫手")
@@ -122,7 +207,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if prompt := st.chat_input("請輸入地區、店名或問題..."):
+if prompt := st.chat_input("例如：內湖家樂福店停車、板橋區、如何租倉？"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
