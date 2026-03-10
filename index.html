@@ -18,7 +18,7 @@
     </style>
   </head>
   <body>
-    <div id="loading-msg">🤖 正在優化跨區搜尋邏輯，加載全台據點資料...</div>
+    <div id="loading-msg">🤖 正在配置精確檢索系統，請稍候...</div>
     <div id="root"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
@@ -32,94 +32,85 @@ import streamlit as st
 
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# 初始化意圖模式
-if "mode" not in st.session_state:
-    st.session_state.mode = None
-
-# --- 1. 全域深度資料庫 (新增內湖等各區詳細數據) ---
+# --- 1. 資料庫配置 ---
 STORES_DB = [
-    # 南港區
-    {"name": "松山店", "area": "南港區", "tags": ["南港", "松山", "八德路"], "addr": "南港區八德路四段768巷5號2F-1", "parking": "🅿️ 大樓 B2 專屬位 (27, 33, 41 號)", "elevator": "🛗 貨梯 (160*170*210cm)", "time": "24H"},
-    {"name": "南港車站店", "area": "南港區", "tags": ["南港", "車站", "環球"], "addr": "南港區忠孝東路七段371號B1AF", "parking": "🅿️ 台鐵地下停車場 B2 (40元/時)", "elevator": "🛗 客用電梯、推車", "time": "06:00-23:00"},
-    {"name": "南港北流店", "area": "南港區", "tags": ["南港", "北流"], "addr": "南港區南港路二段99-5號", "parking": "🅿️ 園區停車場 (30元/時)", "elevator": "🛗 貨梯、推車", "time": "24H"},
-    {"name": "南港興華店", "area": "南港區", "tags": ["南港", "興華", "全聯"], "addr": "南港路二段20巷5號B2", "parking": "🅿️ 全聯地下停車場 B2", "elevator": "🛗 客用電梯", "time": "08:00-23:00"},
-
-    # 內湖區
-    {"name": "內湖家樂福店", "area": "內湖區", "tags": ["內湖", "家樂福", "民善街"], "addr": "內湖區民善街88號4F", "parking": "🅿️ 家樂福 B1/1F 停車場 (提供一小時折抵券)", "elevator": "🛗 配有貨梯", "time": "09:00-22:00"},
-    {"name": "東湖店", "area": "內湖區", "tags": ["內湖", "東湖", "康樂街"], "addr": "內湖區康樂街150號2F", "parking": "🅿️ 康樂合署大樓停車場 (限高 2.1m)", "elevator": "🛗 貨梯 (限重 500kg)", "time": "24H"},
-    {"name": "東湖二號店", "area": "內湖區", "tags": ["內湖", "東湖", "東湖路"], "addr": "內湖區東湖路69號B1", "parking": "🅿️ 路邊停車格或臨停區", "elevator": "🛗 貨梯 (須預約，家樂福人員操作)", "time": "09:00-22:00"},
-
-    # 其他區域範例
-    {"name": "中和威力店", "area": "中和區", "tags": ["中和", "威力"], "addr": "中山路二段291號6樓", "parking": "🅿️ 停車場可直達 6 樓 (前30分免費)", "elevator": "🛗 貨梯", "time": "08:00-24:00"},
-    {"name": "延吉店", "area": "大安區", "tags": ["大安", "延吉"], "addr": "大安區延吉街250號B1", "parking": "🅿️ 家樂福延吉超市停車場", "elevator": "🛗 貨梯 (須預約)", "time": "07:00-24:00"},
+    {"name": "松山店", "area": "南港區", "tags": ["松山", "八德路"], "addr": "南港區八德路四段768巷5號2F-1", "parking": "🅿️ 大樓 B2 專屬位 (27, 33, 41 號)", "elevator": "🛗 貨梯 (160*170*210cm)", "time": "24H"},
+    {"name": "南港車站店", "area": "南港區", "tags": ["車站", "高鐵"], "addr": "南港區忠孝東路七段371號B1AF", "parking": "🅿️ 台鐵地下停車場 B2", "elevator": "🛗 客用電梯、各區推車", "time": "06:00-23:00"},
+    {"name": "南港北流店", "area": "南港區", "tags": ["北流"], "addr": "南港區南港路二段99-5號", "parking": "🅿️ 園區停車場 (1小時30元)", "elevator": "🛗 貨梯、電動升降機", "time": "24H"},
+    {"name": "南港興華店", "area": "南港區", "tags": ["興華", "全聯"], "addr": "南港路二段20巷5號B2", "parking": "🅿️ 全聯地下停車場 B2", "elevator": "🛗 客用電梯、推車(2台)", "time": "08:00-23:00"},
+    {"name": "內湖家樂福店", "area": "內湖區", "tags": ["內湖", "家樂福", "民善"], "addr": "內湖區民善街88號4F", "parking": "🅿️ 家樂福 B1/1F 停車場 (可折抵)", "elevator": "🛗 配有貨梯", "time": "09:00-22:00"},
+    {"name": "東湖店", "area": "內湖區", "tags": ["東湖", "康樂"], "addr": "內湖區康樂街150號2F", "parking": "🅿️ 停車場限高 2.1m", "elevator": "🛗 貨梯 (限重 500kg)", "time": "24H"},
+    {"name": "中和威力店", "area": "中和區", "tags": ["威力"], "addr": "中和區中山路二段291號6樓", "parking": "🅿️ 停車場可直達 6 樓", "elevator": "🛗 貨梯、推車", "time": "08:00-24:00"},
 ]
 
-# --- 2. 智慧搜尋引擎核心 ---
 def handle_query(ui):
-    raw_ui = ui.lower()
-    # 清理常用贅字
-    clean_ui = raw_ui.replace("店", "").replace("區", "").replace("倉庫", "").replace("資訊", "").replace("查詢", "").strip()
-
-    # 先檢測是否有提到地點 (地點優先)
-    target_stores = []
-    found_area = None
+    ui = ui.lower().strip()
     
-    # 嘗試匹配區域或標籤
-    for s in STORES_DB:
-        # 如果輸入包含區域標籤 (如: 內湖) 或 命中店名
-        if any(tag in clean_ui for tag in s['tags']) or clean_ui in s['name'].lower() or s['area'].replace("區","") in clean_ui:
-            target_stores.append(s)
-            found_area = s['area']
+    # A. 租倉流程 (不變)
+    if any(k in ui for k in ["租", "如何租", "辦理", "承租", "手續"]):
+        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約資料：**\\n- **個人戶**：準備雙證件及悠遊卡。\\n- **公司戶**：準備商登表、負責人證件及悠遊卡。\\n辦理請於營業時間前往櫃檯。"""
 
-    # 檢測設施意圖 (停車/貨梯)
+    # B. 設施意圖識別
     current_intent = None
-    if any(k in raw_ui for k in ["停車", "車位", "卸貨"]):
-        current_intent = "parking"
-    if any(k in raw_ui for k in ["貨梯", "電梯", "搬運"]):
-        current_intent = "elevator"
+    if any(k in ui for k in ["停車", "車位", "卸貨"]): current_intent = "parking"
+    if any(k in ui for k in ["貨梯", "電梯", "搬運"]): current_intent = "elevator"
 
-    # 如果有找到據點
-    if target_stores:
-        res = f"🔍 **為您找到 {clean_ui} 附近的據點資訊：**\\n"
-        names = [s['name'] for s in target_stores]
-        res += "📍 包含據點：" + "、".join(names) + "\\n\\n---\\n\\n"
-        
-        for s in target_stores:
-            res += f"🏠 **{s['name']}**\\n"
-            # 如果有特定設施意圖，則只顯示該設施 + 地址
-            if current_intent == "parking":
-                res += f"🅿️ **停車**: {s['parking']}\\n📍 地址: {s['addr']}\\n"
-            elif current_intent == "elevator":
-                res += f"🛗 **搬運**: {s['elevator']}\\n📍 地址: {s['addr']}\\n"
-            else:
-                # 沒提設施，顯示完整懶人包
-                res += f"📍 地址: {s['addr']}\\n🅿️ 停車: {s['parking']}\\n🛗 設備: {s['elevator']}\\n🕒 進出: {s['time']}\\n"
-            res += "\\n"
-        
-        # 完成後清除意圖，避免干擾下一次問答
-        st.session_state.mode = None
+    # C. 精確店名匹配
+    # 檢查是否直接叫出了完整店名 (例如: "松山店")
+    exact_match = None
+    for s in STORES_DB:
+        if s['name'].lower() in ui or (s['name'].replace("店","") in ui and len(ui) > 2):
+            exact_match = s
+            break
+    
+    if exact_match:
+        # 如果找到明確據點，只回覆該店
+        res = f"🏠 **{exact_match['name']} 資訊**\\n"
+        if current_intent == "parking":
+            res += f"🅿️ **停車**: {exact_match['parking']}\\n📍 地址: {exact_match['addr']}"
+        elif current_intent == "elevator":
+            res += f"🛗 **搬運**: {exact_match['elevator']}\\n📍 地址: {exact_match['addr']}"
+        else:
+            res += f"📍 地址: {exact_match['addr']}\\n🅿️ 停車: {exact_match['parking']}\\n🛗 搬運: {exact_match['elevator']}\\n🕒 進出: {exact_match['time']}"
         return res
 
-    # 如果沒找到地點，但有設施意圖，則引導
+    # D. 區域模糊搜尋 (如果沒叫出確切店名)
+    area_matches = []
+    # 提取所有區域名稱 (如: 南港、內湖)
+    all_regions = list(set([s['area'].replace("區","") for s in STORES_DB]))
+    target_region = None
+    for reg in all_regions:
+        if reg in ui:
+            target_region = reg
+            break
+            
+    if target_region:
+        area_matches = [s for s in STORES_DB if target_region in s['area']]
+        
+    if area_matches:
+        res = f"🔍 **在 {target_region} 區域內為您找到以下據點：**\\n"
+        res += "📍 包含：" + "、".join([s['name'] for s in area_matches]) + "\\n\\n---\\n\\n"
+        for s in area_matches:
+            res += f"🏠 **{s['name']}**\\n"
+            if current_intent == "parking":
+                res += f"🅿️ **停車**: {s['parking']}\\n"
+            elif current_intent == "elevator":
+                res += f"🛗 **搬運**: {s['elevator']}\\n"
+            else:
+                res += f"📍 地址: {s['addr']}\\n🅿️ 停車: {s['parking']}\\n"
+            res += "\\n"
+        return res
+
+    # E. 通用語句引導
     if current_intent == "parking":
-        st.session_state.mode = "parking"
-        return "🚗 **收多易全台據點多設有停車場或鄰近車位。**\\n請問您想查詢哪個**區域**(如: 內湖、南港、大安)？小幫手為您查詢。"
+        return "🚗 **收多易全台據點多設有停車場或鄰近停車位。**\\n請問您想查詢哪個**據點**(如: 松山店) 或 **區域**(如: 內湖、南港)？"
     
-    if current_intent == "elevator":
-        st.session_state.mode = "elevator"
-        return "🛗 **收多易據點皆配有搬運貨梯。**\\n請問您想查詢哪個**區域**(如: 中山區、士林區)？"
-
-    # 租倉手續
-    if any(k in raw_ui for k in ["租", "手續", "辦理"]):
-        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約資料：**\\n1. **個人戶**：雙證件及悠遊卡。\\n2. **公司戶**：商登表、負責人證件及悠遊卡。\\n辦理請於營業時間前往櫃檯。"""
-
-    return "🤖 您好！您可以輸入**區域或店名**(如: 內湖、中和、桃園) 或詢問 **如何租倉、停車資訊、貨梯設備**。"
+    return "🤖 您好！您可以輸入**特定據點**(如: 松山店) 或 **區域名稱**(如: 南港、內湖) 來獲取詳細的地址與設施資訊。"
 
 # --- 3. 介面呈現 ---
 with st.sidebar:
-    st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
-    st.markdown("### 🏢 收多易全台管家")
-    st.info("已修正跨區搜尋優先權。輸入地點後，系統將立即帶出詳細資訊。")
+    st.markdown("### 🏢 收多易智能管家")
+    st.info("已開啟精確導引模式：\\n1. 直接輸入店名可獲取單店資訊。\\n2. 輸入區域會列出該區所有店點。")
     st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
 
 st.title("🧡 收多易客服小幫手")
