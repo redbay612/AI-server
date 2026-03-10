@@ -18,7 +18,7 @@
     </style>
   </head>
   <body>
-    <div id="loading-msg">🤖 正在優化搜尋邏輯與意圖鎖定系統...</div>
+    <div id="loading-msg">🤖 正在配置南港區四店及全台分區搜尋引擎...</div>
     <div id="root"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
@@ -32,97 +32,91 @@ import streamlit as st
 
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# 初始化對話狀態
+# 初始化意圖模式
 if "mode" not in st.session_state:
-    st.session_state.mode = None  # None, "parking", "elevator"
+    st.session_state.mode = None
 
-# --- 1. 全台據點深度資料庫 (確保關鍵字覆蓋) ---
+# --- 1. 全台據點分區資料庫 ---
 STORES_DB = [
-    {"name": "松山店", "tags": ["松山", "八德", "南港"], "addr": "南港區八德路四段768巷5號2F-1", "parking": "大樓 B2 專屬位 (27, 33, 41 號)；貨車請停一樓卸貨區。", "elevator": "貨梯 (160*170*210cm)、電動升降機", "time": "24H"},
-    {"name": "天母圓環店", "tags": ["天母", "士林"], "addr": "士林區中山北路七段154巷6號2樓", "parking": "大樓停車場 (08:00-10:30 提供一小時折抵)", "elevator": "配有貨梯", "time": "24H"},
-    {"name": "延吉店", "tags": ["延吉", "大安"], "addr": "大安區延吉街250號B1", "parking": "家樂福延吉超市停車場", "elevator": "配有貨梯 (須平日預約)", "time": "07:00-24:00"},
-    {"name": "仁愛二店", "tags": ["仁愛", "大安"], "addr": "大安區仁愛路四段388號B1", "parking": "家樂福超市仁愛二店內停車場", "elevator": "店內配有貨梯", "time": "07:00-24:00"},
-    {"name": "民生松江店", "tags": ["民生", "松江", "中山"], "addr": "中山區民生東路二段119號B1", "parking": "設有停車場，車道限高 1.8 公尺", "elevator": "電動升降機、推車", "time": "06:00-22:00"},
-    {"name": "新店店", "tags": ["新店"], "addr": "新店區民權路108號B1", "parking": "由民權路 90 巷進入至 B1 停車場", "elevator": "配有貨梯 (平日 10-19)", "time": "24H"},
-    {"name": "中和威力店", "tags": ["中和", "威力"], "addr": "中和區中山路二段291號6樓", "parking": "家樂福停車場，車可直達 6 樓", "elevator": "配有貨梯", "time": "08:00-24:00"},
-    {"name": "三重湯城店", "tags": ["三重", "湯城"], "addr": "三重重新路五段609巷10號B1", "parking": "湯城園區停車場 (30分鐘免費)", "elevator": "配有貨梯", "time": "24H"},
+    # 南港區 (含松山店)
+    {"name": "松山店", "area": "南港區", "tags": ["松山", "八德", "南港"], "addr": "南港區八德路四段768巷5號2F-1 (松山車站對面)", "parking": "大樓 B2 專屬位 (27, 33, 41 號)；貨車請停一樓卸貨區。", "elevator": "貨梯 (160*170*210cm)、電動升降機", "time": "24H"},
+    {"name": "南港車站店", "area": "南港區", "tags": ["南港", "車站", "高鐵", "環球"], "addr": "南港區忠孝東路七段371號B1AF (環球購物中心B2)", "parking": "台鐵地下停車場 B2 (40元/時)", "elevator": "客用電梯、摺疊梯、各區推車", "time": "A-K區 06:00-23:00 / L區 11:00-21:00"},
+    {"name": "南港北流店", "area": "南港區", "tags": ["南港", "北流", "流行音樂"], "addr": "南港區南港路二段99-5號 (近流行音樂中心)", "parking": "園區停車場 (1小時30元)", "elevator": "配有貨梯、推車、電動升降機", "time": "24H"},
+    {"name": "南港興華店", "area": "南港區", "tags": ["南港", "興華", "全聯"], "addr": "南港區南港路二段20巷5號B2 (全聯樓下)", "parking": "全聯地下停車場 B2 (80元/時)", "elevator": "客用電梯、推車(2台)", "time": "08:00-23:00"},
+
+    # 士林區
+    {"name": "士林劍潭店", "area": "士林區", "tags": ["士林", "劍潭", "基河"], "addr": "士林區承德路四段179巷7號", "parking": "收費停車場及專屬車位", "elevator": "簡易載貨平台、推車", "time": "24H"},
+    {"name": "天母圓環店", "area": "士林區", "tags": ["天母", "圓環", "士林"], "addr": "士林區中山北路七段154巷6號2樓", "parking": "大樓停車場 (提供折抵券)", "elevator": "配有貨梯、梯車", "time": "24H"},
+
+    # 大安區
+    {"name": "延吉店", "area": "大安區", "tags": ["延吉", "大安", "東區"], "addr": "大安區延吉街250號B1", "parking": "家樂福延吉超市停車場", "elevator": "貨梯 (須預約)", "time": "07:00-24:00"},
+    {"name": "仁愛二店", "area": "大安區", "tags": ["仁愛", "大安", "國父紀念館"], "addr": "大安區仁愛路四段388號B1", "parking": "家樂福超市停車場", "elevator": "店內貨梯", "time": "07:00-24:00"},
+
+    # 中和區
+    {"name": "中和威力店", "area": "中和區", "tags": ["中和", "威力廣場", "連城"], "addr": "中山路二段291號6樓", "parking": "家樂福停車場，車可直達 6 樓", "elevator": "配有貨梯", "time": "08:00-24:00"},
 ]
 
-# --- 2. 搜尋引擎核心 ---
+# --- 2. 核心搜尋引擎 ---
 def handle_query(ui):
     raw_ui = ui.lower()
-    # 清理常用冗餘字，方便匹配店名核心
-    clean_ui = raw_ui.replace("店", "").replace("資訊", "").replace("倉庫", "").replace("哪裡", "").strip()
+    # 清理常用贅字
+    clean_ui = raw_ui.replace("店", "").replace("資訊", "").replace("區", "").strip()
 
-    # A. 檢測特殊意圖 (停車/貨梯/手續)
+    # A. 檢測特殊意圖 (停車/貨梯)
     if any(k in raw_ui for k in ["停車", "車位", "卸貨"]):
         st.session_state.mode = "parking"
     if any(k in raw_ui for k in ["貨梯", "電梯", "搬運"]):
         st.session_state.mode = "elevator"
     
-    if any(k in raw_ui for k in ["租", "流程", "手續", "辦理"]):
-        st.session_state.mode = None # 清除模式，給予特定回覆
-        return """🏠 **如何租倉辦理？**
-建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)
+    # B. 租倉手續
+    if any(k in raw_ui for k in ["租", "如何租", "手續", "辦理"]):
+        st.session_state.mode = None
+        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約資料：**\\n1. **個人戶**：準備**雙證件**及**悠遊卡**。\\n2. **公司戶**：準備**商業登記表**、**負責人證件**及**悠遊卡**。\\n辦理請於營業時間前往櫃檯。"""
 
-**簽約準備資料：**
-1. **個人戶**：準備**雙證件**及**悠遊卡**。
-2. **公司戶**：準備**商業登記表**、**負責人證件**及**悠遊卡**。
-請於營業時間前往櫃檯辦理。"""
-
-    # B. 執行搜尋
-    matched_stores = []
+    # C. 執行搜尋 (匹配區域或店名標籤)
+    target_stores = []
     for s in STORES_DB:
-        # 如果輸入的內容包含店名標籤 (如輸入"松山"命中"松山店") 
-        # 或 店名在輸入中 (如輸入"大安區停車"命中"大安")
-        if any(tag in clean_ui for tag in s['tags']) or clean_ui in s['name'].lower():
-            matched_stores.append(s)
+        # 如果輸入內容命中區域標籤(如:南港) 或 店名標籤(如:松山)
+        if clean_ui in s['area'] or any(tag in clean_ui for tag in s['tags']):
+            target_stores.append(s)
 
-    # C. 根據模式回覆結果
-    if matched_stores:
+    # D. 回覆生成
+    if target_stores:
         res = ""
-        # 模式 1：詢問停車位後的跟進
-        if st.session_state.mode == "parking":
-            res = f"🔍 已為您查詢到 **{clean_ui}** 相關據點的停車資訊：\\n\\n"
-            for s in matched_stores:
-                res += f"🏠 **{s['name']}**\\n🅿️ **停車**: {s['parking']}\\n📍 地址: {s['addr']}\\n\\n"
-            st.session_state.mode = None # 回覆完畢後清除模式
-            return res
+        # 1. 條列據點名稱 (依照您的需求)
+        names = [s['name'] for s in target_stores]
+        res += f"🔍 **為您找到 {clean_ui} 區域的據點：**\\n📍 " + "、".join(names) + "\\n\\n---\\n\\n"
         
-        # 模式 2：詢問貨梯後的跟進
-        elif st.session_state.mode == "elevator":
-            res = f"🔍 已為您查詢到 **{clean_ui}** 相關據點的搬運設備：\\n\\n"
-            for s in matched_stores:
-                res += f"🏠 **{s['name']}**\\n🛗 **設備**: {s['elevator']}\\n📍 地址: {s['addr']}\\n\\n"
-            st.session_state.mode = None
-            return res
+        # 2. 依序詳解資訊
+        for s in target_stores:
+            res += f"🏠 **{s['name']}**\\n"
+            if st.session_state.mode == "parking":
+                res += f"🅿️ **停車**: {s['parking']}\\n"
+            elif st.session_state.mode == "elevator":
+                res += f"🛗 **搬運設備**: {s['elevator']}\\n"
+            else:
+                # 預設詳情
+                res += f"📍 **地址**: {s['addr']}\\n"
+                res += f"🅿️ **停車**: {s['parking']}\\n"
+                res += f"🛗 **設備**: {s['elevator']}\\n"
+                res += f"🕒 **進出**: {s['time']}\\n"
+            res += "\\n"
         
-        # 模式 3：直接詢問店點 (無特定意圖)
-        else:
-            res = f"📍 **{clean_ui} 區域據點詳情如下：**\\n\\n"
-            for s in matched_stores:
-                res += f"🏠 **{s['name']}**\\n"
-                res += f"- **地址**: {s['addr']}\\n"
-                res += f"- **停車**: {s['parking']}\\n"
-                res += f"- **搬運**: {s['elevator']}\\n"
-                res += f"- **進出**: {s['time']}\\n\\n"
-            return res
+        st.session_state.mode = None # 回覆完畢清除意圖
+        return res
 
-    # D. 如果只有問設施但沒有地點 (觸發引導)
+    # E. 設施通用引導
     if st.session_state.mode == "parking":
-        return "🚗 **收多易全台多數據點皆設有停車場或鄰近停車位。**\\n請問您想查詢哪個**地區** (如：大安區、南港區) 或是特定的**據點名稱**？小幫手立即為您查詢細節。"
-    
+        return "🚗 **收多易全台據點多設有停車場。**\\n請問您想查詢哪個**區域**(如: 南港、大安) 或特定**據點**？小幫手立即報位。"
     if st.session_state.mode == "elevator":
-        return "🛗 **收多易全台多數據點皆配有貨梯或客梯。**\\n請問您想查詢哪個**地區** (如：士林區、中和區) 或是特定的**據點名稱**？"
+        return "🛗 **收多易據點皆配有貨梯或客梯。**\\n請問您想查詢哪個**區域**或**據點**？小幫手為您查詢設備詳情。"
 
-    # E. 最終 Fallback
-    return "🤖 您好！您可以輸入**地區或店名**(如: 松山、新店、台中) 或詢問 **如何租倉、停車資訊、貨梯設備**。"
+    return "🤖 您好！您可以輸入**區域或店名**(如: 南港、士林、中和) 或詢問 **如何租倉、據點停車資訊、貨梯設備**。"
 
 # --- 3. 介面呈現 ---
 with st.sidebar:
     st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
-    st.markdown("### 🏢 收多易智能管家")
-    st.info("已開啟對話模式追蹤。輸入設施後再輸入地點，系統將精確定位資訊。")
+    st.info("已更新南港區四店(松山/車站/北流/興華)及各區搜尋邏輯。")
     st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
 
 st.title("🧡 收多易客服小幫手")
@@ -134,7 +128,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-if prompt := st.chat_input("請輸入地區、店名或問題..."):
+if prompt := st.chat_input("請輸入地區、店名或問題 (例如：南港區、松山店停車、如何租倉...)"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
