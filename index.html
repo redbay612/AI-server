@@ -18,7 +18,7 @@
     </style>
   </head>
   <body>
-    <div id="loading-msg">🤖 正在加載全台 50+ 據點服務概覽資料庫...</div>
+    <div id="loading-msg">🤖 正在優化對話記憶邏輯，請稍候...</div>
     <div id="root"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
@@ -32,99 +32,100 @@ import streamlit as st
 
 st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
 
-# --- 1. 全台 50+ 據點深度資料庫 (依照最新 CSV 更新) ---
+# 初始化對話意圖記憶
+if "intent" not in st.session_state:
+    st.session_state.intent = None # 用於記憶客戶是否在詢問設施
+
+# --- 1. 完整校對資料庫 ---
 STORES_DB = [
-    # 台北市
-    {"name": "逸仙店", "area": "台北市/信義區", "addr": "逸仙路26巷1號B1", "time": "24H", "parking": "7號入口臨停下貨或國父紀念館停車場", "equip": "貨梯、推車(2台)、電動升降機、梯車", "pkg": "有 (三邊總和<=200cm)", "box": "有販售", "rent": "620-17530元"},
-    {"name": "延吉店", "area": "台北市/大安區", "addr": "延吉街250號B1", "time": "07:00-24:00", "parking": "鄰近路邊停車格 (家樂福超市內)", "equip": "貨梯(需預約)、推車(1台)", "pkg": "無", "box": "無販售", "rent": "1980-11680元"},
-    {"name": "仁愛二店", "area": "台北市/大安區", "addr": "仁愛路四段388號B1", "time": "07:00-24:00", "parking": "鄰近路邊停車格", "equip": "貨梯、推車(1台)", "pkg": "無", "box": "無販售", "rent": "1660-8700元"},
-    {"name": "仁愛圓環店", "area": "台北市/大安區", "addr": "仁愛路四段50-99號", "time": "08:00-24:00", "parking": "鄰近停車場 (應安168)", "equip": "推車(1台)", "pkg": "無", "box": "無販售", "rent": "1940-2700元"},
-    {"name": "忠孝二號店", "area": "台北市/大安區", "addr": "忠孝東路3段218號B1", "time": "07:00-24:00", "parking": "正義國宅停車場或路邊卸貨格", "equip": "推車(1台)", "pkg": "無", "box": "無販售", "rent": "1650-7870元"},
-    {"name": "天母圓環店", "area": "台北市/士林區", "addr": "中山北路七段154巷6號2樓", "time": "24H", "parking": "大樓停車場 (提供1小時折抵券)", "equip": "貨梯、推車(2台)、梯車", "pkg": "有 (三邊總和<=200cm)", "box": "有販售", "rent": "950-17000元"},
-    {"name": "士林劍潭店", "area": "台北市/士林區", "addr": "承德路四段179巷7號", "time": "24H", "parking": "大樓收費停車場 (設有專屬車位)", "equip": "簡易載貨平台、推車(2台)", "pkg": "有", "box": "有販售", "rent": "1170-9460元"},
-    {"name": "民生松江店", "area": "台北市/中山區", "addr": "民生東路二段119號B1", "time": "06:00-22:00", "parking": "設有停車場 (車道限高 1.8m)", "equip": "車道直達、電動升降機、推車(2台)", "pkg": "有", "box": "有販售", "rent": "980-14710元"},
-    {"name": "松山店", "area": "台北市/南港區", "addr": "八德路四段768巷5號2F-1", "time": "24H", "parking": "大樓地下停車場 (車位27, 33, 41)", "equip": "貨梯、推車(1台)、電動升降機", "pkg": "有", "box": "有販售", "rent": "950-12640元"},
+    # 台北市 - 大安區
+    {"name": "延吉店", "area": "大安區,台北市", "addr": "延吉街250號B1", "parking": "家樂福延吉超市停車場", "elevator": "配有貨梯 (須平日 10-19 預約)"},
+    {"name": "仁愛二店", "area": "大安區,台北市", "addr": "仁愛路四段388號B1", "parking": "家樂福超市仁愛二店內停車場", "elevator": "店內配有貨梯"},
+    {"name": "仁愛圓環店", "area": "大安區,台北市", "addr": "仁愛路四段50-99號", "parking": "鄰近應安168停車場", "elevator": "推車搬運"},
+    {"name": "忠孝二號店", "area": "大安區,台北市", "addr": "忠孝東路3段218號B1", "parking": "正義國宅停車場或路邊卸貨格", "elevator": "推車搬運"},
+    {"name": "新生南店", "area": "大安區,台北市", "addr": "新生南路3段2號B1", "parking": "周邊機車停車格及路邊停車", "elevator": "貨梯 (須預約)"},
     
-    # 新北市
-    {"name": "中和威力店", "area": "新北市/中和區", "addr": "中山路二段291號6樓", "time": "08:00-24:00", "parking": "家樂福停車場 (可直達6樓)", "equip": "貨梯、推車(1台)", "pkg": "無", "box": "無販售", "rent": "1760-6350元"},
-    {"name": "中和好市多店", "area": "新北市/中和區", "addr": "中山路二段359巷8號3F", "time": "24H", "parking": "大樓設有停車場", "equip": "貨梯、推車(1台)、電動升降機", "pkg": "有", "box": "有販售", "rent": "700-9930元"},
-    {"name": "永和店", "area": "新北市/永和區", "addr": "永平路82號B1", "time": "24H", "parking": "B1可臨停卸貨 (避開夜市時間)", "equip": "車道直達、推車(2台)、電動升降機", "pkg": "有", "box": "有販售", "rent": "810-16500元"},
-    {"name": "新店店", "area": "新北市/新店區", "addr": "民權路108號B1", "time": "24H", "parking": "新店迷你倉停車場 (由民權路90巷入)", "equip": "貨梯 (10-19)、推車(2台)、車道直達", "pkg": "有", "box": "有販售", "rent": "840-9520元"},
-    
-    # 外縣市
-    {"name": "新竹中華店", "area": "新竹市", "addr": "中華路二段198號", "time": "24H", "parking": "專屬停車場 (東區民權路24巷1號)", "equip": "電動升降機、梯車、推車(2台)", "pkg": "有 (三邊<=200cm)", "box": "有販售", "rent": "890-7860元"},
-    {"name": "台中豐原店", "area": "台中市", "addr": "向陽路265號2F", "time": "24H", "parking": "設有停車場 (15-30元/時)", "equip": "貨梯、推車(1台)", "pkg": "有", "box": "有販售", "rent": "1610-8100元"},
-    {"name": "台南民生店", "area": "台南市", "addr": "民生路二段72號B1", "time": "24H", "parking": "168Parking 國華室內停車場 (B1直達)", "equip": "貨梯、推車(1台)", "pkg": "有", "box": "無販售", "rent": "1640-7100元"},
-    {"name": "高雄復興店", "area": "高雄市", "addr": "復興一路80號4樓", "time": "24H", "parking": "全聯B1停車場", "equip": "客梯、推車(2台)、梯車", "pkg": "有", "box": "無販售", "rent": "750-10750元"}
+    # 台北市 - 中山區
+    {"name": "民生松江店", "area": "中山區,台北市", "addr": "民生東路二段119號B1", "parking": "大樓停車場 (車道限高 1.8m)", "elevator": "電動升降機、推車"},
+    {"name": "中山店", "area": "中山區,台北市", "addr": "八德路二段260號11F", "parking": "中影八德大樓1F專屬位 (66, 67 限停0.5H)", "elevator": "配有貨梯 (160*170*210cm)"},
+    {"name": "南東店", "area": "中山區,台北市", "addr": "吉林路26巷34號B1", "parking": "設有卸貨區 (請平停於斜坡上勿駛入)", "elevator": "貨梯 (07:00-22:00)"},
+
+    # 台北市 - 南港區
+    {"name": "松山店", "area": "南港區,松山,八德路", "addr": "八德路四段768巷5號2F-1", "parking": "大樓地下停車場 (車位27, 33, 41)", "elevator": "貨梯、電動升降機"},
+    {"name": "南港興華店", "area": "南港區", "addr": "南港路二段20巷5號B2", "parking": "全聯 B2 停車場", "elevator": "客用電梯"},
+
+    # 其他區域
+    {"name": "中和威力店", "area": "中和區,新北市", "addr": "中山路二段291號6樓", "parking": "家樂福停車場 (車可直達6樓)", "elevator": "配有貨梯"},
+    {"name": "桃園經國店", "area": "桃園市", "addr": "經國路369號", "parking": "家樂福停車場 (可折抵)", "elevator": "配有貨梯"},
 ]
 
-# --- 2. 核心搜尋引擎邏輯 ---
+# --- 2. 核心搜尋邏輯 ---
 def handle_query(ui):
-    ui = ui.lower().strip()
+    ui = ui.lower().replace("店", "").strip()
     
-    # A. 租倉流程 (依照客戶要求更新)
-    if any(k in ui for k in ["租", "辦理", "承租", "手續"]):
-        return """🏠 **如何租倉辦理？**
-建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)
-
-**簽約準備資料：**
-1. **個人戶**：請準備**雙證件**及**悠遊卡**。
-2. **公司戶**：請準備**商業登記表**、**負責人證件**及**悠遊卡**。
-
-**辦理方式：**
-請於各據點**營業時間**前往櫃檯辦理簽約登記。"""
-
-    # B. 通用設施引導 (當沒提地點只問設施時)
-    is_parking_q = any(k in ui for k in ["停車", "車位", "卸貨"])
-    is_elevator_q = any(k in ui for k in ["電梯", "貨梯", "搬運"])
+    # A. 判斷是否為設施詢問 (停車/貨梯)
+    is_asking_parking = any(k in ui for k in ["停車", "車位", "卸貨", "限高"])
+    is_asking_elevator = any(k in ui for k in ["電梯", "貨梯", "搬運"])
     
-    # 提取地區關鍵字
+    if is_asking_parking:
+        st.session_state.intent = "停車"
+    if is_asking_elevator:
+        st.session_state.intent = "電梯"
+
+    # B. 提取地區關鍵字
     target_area = None
-    all_areas = ["士林", "大安", "中山", "南港", "內湖", "中正", "萬華", "信義", "文山", "中和", "板橋", "新店", "三重", "土城", "新莊", "淡水", "桃園", "新竹", "台中", "台南", "高雄", "基隆"]
+    all_areas = ["大安", "中山", "士林", "南港", "內湖", "中正", "萬華", "信義", "文山", "中和", "板橋", "新店", "三重", "桃園", "台中", "高雄", "新竹", "八德"]
     for area in all_areas:
         if area in ui:
             target_area = area
             break
             
-    # C. 搜尋邏輯
-    matched_stores = []
-    # 根據地區或店名關鍵字檢索
-    for s in STORES_DB:
-        if (target_area and target_area in s['area']) or \
-           (ui in s['name'].lower().replace("店","")):
-            matched_stores.append(s)
+    # C. 租倉流程 (優先回覆)
+    if any(k in ui for k in ["租", "手續", "簽約"]):
+        st.session_state.intent = None # 清除意圖
+        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約準備資料：**\\n- **個人戶**：請準備**雙證件**及**悠遊卡**。\\n- **公司戶**：請準備**商業登記表**、**負責人證件**及**悠遊卡**。\\n**辦理方式：** 請於營業時間前往櫃檯辦理。"""
 
-    # D. 回覆生成
+    # D. 回覆邏輯
+    # 如果有明確 地區 或 店名
+    matched_stores = [s for s in STORES_DB if (target_area and target_area in s['area']) or (target_area and target_area in s['name'])]
+    
     if matched_stores:
-        res = ""
-        # 1. 條列清單 (依照客戶要求)
+        res = f"🔍 **為您找到 {target_area} 附近的據點資訊：**\\n\\n"
+        # 1. 先條列清單
         names = [s['name'] for s in matched_stores]
-        res += f"📍 **為您找到以下相關據點：**\\n" + "、".join(names) + "\\n\\n---\\n\\n"
+        res += "📍 包含據點：" + "、".join(names) + "\\n\\n---\\n\\n"
         
-        # 2. 詳解資訊
+        # 2. 詳解資訊 (根據意圖過濾)
         for s in matched_stores:
             res += f"🏠 **{s['name']}**\\n"
-            res += f"📍 地址/位置: {s['addr']}\\n"
-            res += f"🕒 進出時間: {s['time']}\\n"
-            res += f"🅿️ 交通停車: {s['parking']}\\n"
-            res += f"🛗 搬運設備: {s['equip']}\\n"
-            res += f"📩 代收包裹: {s['pkg']}\\n"
-            res += f"📦 紙箱包材: {s['box']}\\n"
-            res += f"💰 租金範圍: {s['rent']}\\n\\n"
+            if st.session_state.intent == "停車":
+                res += f"🅿️ **停車**: {s['parking']}\\n"
+            elif st.session_state.intent == "電梯":
+                res += f"🛗 **設備**: {s['elevator']}\\n"
+            else:
+                # 沒特定意圖時顯示完整資訊
+                res += f"📍 **地址**: {s['addr']}\\n"
+                res += f"🅿️ **停車**: {s['parking']}\\n"
+                res += f"🛗 **設備**: {s['elevator']}\\n"
+            res += "\\n"
+        
+        # 完成回覆後清除意圖，避免下次詢問被干擾
+        st.session_state.intent = None
         return res
 
-    # 如果僅問設施但沒匹配到地點
-    if is_parking_q:
-        return "🚗 **收多易全台多數據點皆設有停車場或鄰近停車位。**\\n請問您想查詢哪個**地區**(如: 大安區、中和區) 或特定的**據點**？小幫手再為您提供詳細資訊。"
-    if is_elevator_q:
-        return "🛗 **收多易全台多數據點皆配有貨梯或客梯方便搬運。**\\n請問您想查詢哪個**地區**(如: 士林區、中山區) 或特定的**據點**？"
+    # 如果只有問設施但「沒提地區」
+    if is_asking_parking:
+        return "🚗 **收多易全台多數據點皆設有停車場或鄰近停車位。**\\n\\n請問您想查詢哪個**區域**(如: 大安區、中山區) 或是特定的**據點名稱**？小幫手立即為您查詢該店停車細節。"
+    
+    if is_asking_elevator:
+        return "🛗 **收多易全台多數據點皆配有貨梯或客梯方便搬運。**\\n\\n請問您想查詢哪個**區域**(如: 士林區、中和區) 或是特定的**據點名稱**？"
 
-    return "🤖 您好！您可以輸入**地區或店名**(如: 內湖、新竹、中和) 或詢問 **如何租倉、停車資訊、貨梯設備**。"
+    return "🤖 您好！您可以輸入**地區或店名**(如: 大安、松山、中和) 或詢問 **如何租倉、停車資訊、貨梯設備**。"
 
 # --- 3. 介面呈現 ---
 with st.sidebar:
     st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
-    st.info("資料庫已同步 50+ 全台據點服務概覽。\\n支援分區條列檢索。")
+    st.info("已開啟對話記憶功能：\\n詢問設施後接著輸入地區，系統將自動導出詳細設備資訊。")
     st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
 
 st.title("🧡 收多易客服小幫手")
