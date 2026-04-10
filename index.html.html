@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>收多易客服小幫手</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.css" />
+    <style>
+      #loading-msg {
+        font-family: sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading-msg">🤖 正在寫入全台 58 據點完整資料庫，請稍候...</div>
+    <div id="root"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.39.0/build/stlite.js"></script>
+    <script>
+      stlite.mount({
+        requirements: ["streamlit"],
+        entrypoint: "app.py",
+        files: {
+          "app.py": `
+import streamlit as st
+
+st.set_page_config(page_title="收多易客服小幫手", page_icon="🧡")
+
+# --- 1. 全台 58 據點完整資料庫 ---
+STORES_DB = [
+    # 台北市 - 文山區
+    {"name": "文山萬慶店", "dist": "文山區", "addr": "文山區萬慶街27號B1F", "parking": "設有停車場(2個臨停位)，貨車停側門卸貨區", "elevator": "貨梯、樓梯車", "time": "24H"},
+    {"name": "政大店", "dist": "文山區", "addr": "文山區萬壽路27號2F", "parking": "卸貨碼頭(限半小時，09-21:00)", "elevator": "貨梯、電動升降機", "time": "24H"},
+    {"name": "文山興隆店", "dist": "文山區", "addr": "文山區興隆路一段15號3樓", "parking": "全聯3F停車場或門口卸貨區", "elevator": "貨梯、電動升降機", "time": "24H"},
+    
+    # 台北市 - 中正區
+    {"name": "南門店", "dist": "中正區", "addr": "中正區延平南路189號B1", "parking": "台灣聯通B1(直達入口)", "elevator": "車道直達、推車", "time": "24H"},
+    {"name": "台北車站店", "dist": "中正區", "addr": "中正區忠孝西路一段50號B1", "parking": "許昌街停車場B4&B5", "elevator": "客用電梯", "time": "24H"},
+    
+    # 台北市 - 中山區
+    {"name": "中山店", "dist": "中山區", "addr": "中山區八德路二段260號11F", "parking": "大樓停車場(66,67位)，限半小時", "elevator": "貨梯(160*170*210cm)", "time": "24H"},
+    {"name": "民生松江店", "dist": "中山區", "addr": "中山區民生東路二段119號B1", "parking": "大樓停車場，車道限高 1.8m", "elevator": "電動升降機", "time": "06:00-22:00"},
+    {"name": "南東店", "dist": "中山區", "addr": "中山區吉林路26巷34號B1", "parking": "設有卸貨區(勿駛入斜坡)", "elevator": "貨梯(07-22:00)", "time": "24H"},
+
+    # 台北市 - 大安區
+    {"name": "延吉店", "dist": "大安區", "addr": "大安區延吉街250號B1", "parking": "鄰近路邊停車格", "elevator": "貨梯(須預約)", "time": "07:00-24:00"},
+    {"name": "仁愛二店", "dist": "大安區", "addr": "仁愛路四段388號B1", "parking": "家樂福超市內停車場", "elevator": "店內配有貨梯", "time": "07:00-24:00"},
+    {"name": "仁愛圓環店", "dist": "大安區", "addr": "仁愛路四段50-99號", "parking": "鄰近應安168停車場", "elevator": "推車搬運", "time": "08:00-24:00"},
+    {"name": "忠孝二號店", "dist": "大安區", "addr": "大安區忠孝東路3段218號B1", "parking": "正義國宅停車場或路邊卸貨格", "elevator": "推車搬運", "time": "07:00-24:00"},
+    {"name": "新生南店", "dist": "大安區", "addr": "新生南路3段2號B1", "parking": "周邊停車格", "elevator": "貨梯(須預約)", "time": "07:00-24:00"},
+
+    # 台北市 - 士林區
+    {"name": "士林劍潭店", "dist": "士林區", "addr": "士林區承德路四段179巷7號", "parking": "專屬車位(上班時間消磁1H)", "elevator": "簡易載貨平台", "time": "24H"},
+    {"name": "天母圓環店", "dist": "士林區", "addr": "中山北路七段154巷6號2樓", "parking": "大樓停車場(08:00-10:30折抵1H)", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "天母德行店", "dist": "士林區", "addr": "德行西路47號B1", "parking": "家樂福B1停車場", "elevator": "車道直達", "time": "08:00-23:00"},
+    {"name": "天母廣場店", "dist": "士林區", "addr": "天母西路3號2樓", "parking": "大樓停車場(40元/時)", "elevator": "客用電梯", "time": "08:00-24:00"},
+
+    # 台北市 - 內湖/南港
+    {"name": "內湖家樂福店", "dist": "內湖區", "addr": "民善街88號4F", "parking": "家樂福停車場(可領1H折抵)", "elevator": "貨梯、爬梯", "time": "09:00-22:00"},
+    {"name": "東湖店", "dist": "內湖區", "addr": "康樂街150號2F", "parking": "康樂大樓B1-B3(30元/時)", "elevator": "貨梯(限重500kg)", "time": "24H"},
+    {"name": "東湖二號店", "dist": "內湖區", "addr": "東湖路69號B1", "parking": "臨停區(由家樂福人員操作貨梯)", "elevator": "貨梯(須預約)", "time": "09:00-22:00"},
+    {"name": "松山店", "dist": "南港區", "addr": "八德路四段768巷5號2F-1", "parking": "大樓B2專屬位(27,33,41)", "elevator": "貨梯、電動升降機", "time": "24H"},
+    {"name": "南港興華店", "dist": "南港區", "addr": "南港路二段20巷5號B2", "parking": "全聯B2停車場(80元/時)", "elevator": "客用電梯", "time": "08:00-23:00"},
+    {"name": "南港北流店", "dist": "南港區", "addr": "南港路二段99-5號", "parking": "園區停車場(30元/時)", "elevator": "貨梯、電動升降機", "time": "24H"},
+    {"name": "南港車站店", "dist": "南港區", "addr": "忠孝東路七段371號B1AF", "parking": "台鐵地下停車場B2(40元/時)", "elevator": "客用電梯", "time": "06:00-23:00"},
+
+    # 新北市 - 各區
+    {"name": "板橋店", "dist": "板橋區", "addr": "東門街30-2號5樓之1", "parking": "大樓停車場(每小時折抵20元章)", "elevator": "客梯、推車", "time": "24H"},
+    {"name": "土城店", "dist": "土城區", "addr": "金城路三段202-6號2樓", "parking": "前方停車場(10分內免費)", "elevator": "貨梯、作業區", "time": "24H"},
+    {"name": "新店店", "dist": "新店區", "addr": "民權路108號B1", "parking": "地下室專屬停車場(90巷入)", "elevator": "車道直達、貨梯", "time": "24H"},
+    {"name": "新店民族店", "dist": "新店區", "addr": "新店區民族路B1", "parking": "鄰近大豐悠活停車場", "elevator": "推車、電子鎖", "time": "24H"},
+    {"name": "永和店", "dist": "永和區", "addr": "永平路82號B1", "parking": "B1臨停卸貨(避開夜市時間)", "elevator": "車道直達", "time": "24H"},
+    {"name": "中和威力店", "dist": "中和區", "addr": "中山路二段291號6樓", "parking": "家樂福停車場(可直達6樓)", "elevator": "貨梯、推車", "time": "08:00-24:00"},
+    {"name": "中和好市多店", "dist": "中和區", "addr": "中山路二段359巷8號3F", "parking": "大樓停車場(需詢警衛)", "elevator": "貨梯、電動升降機", "time": "24H"},
+    {"name": "中和立德店", "dist": "中和區", "addr": "立德街211號3樓", "parking": "大樓停車場(入口左二車位)", "elevator": "貨梯、升降機", "time": "24H"},
+    {"name": "中和二號店", "dist": "中和區", "addr": "中山路二段146號B1", "parking": "地下停車場(174巷入)", "elevator": "車道直達、升降機", "time": "24H"},
+    {"name": "中和環球店", "dist": "中和區", "addr": "中山路三段110號8樓", "parking": "大樓停車場(30分內免費)", "elevator": "貨梯、升降機", "time": "24H"},
+    {"name": "新莊昌隆店", "dist": "新莊區", "addr": "昌隆街69號", "parking": "鄰近聯通收費停車場", "elevator": "一樓據點，推車搬運", "time": "24H"},
+    {"name": "三重光復店", "dist": "三重區", "addr": "光復路一段85號9樓", "parking": "停車場(30分內免費)", "elevator": "2台客梯、升降機", "time": "24H"},
+    {"name": "三重湯城店", "dist": "三重區", "addr": "重新路五段609巷10號B1", "parking": "園區停車場(30分內免費)", "elevator": "貨梯、升降機", "time": "24H"},
+    {"name": "淡水竹圍店", "dist": "淡水區", "addr": "民權路27號4F之5", "parking": "大樓4F專屬車位(限高2.1m)", "elevator": "貨梯、車道直達", "time": "24H"},
+    {"name": "海洋都心店", "dist": "淡水區", "addr": "新市三路二段213號2F", "parking": "路邊臨停或公有停車場", "elevator": "貨梯、升降機", "time": "24H"},
+
+    # 桃園/新竹/基隆
+    {"name": "桃園經國店", "dist": "桃園區", "addr": "經國路369號", "parking": "家樂福停車場(機車免費)", "elevator": "貨梯、電子鎖", "time": "24H"},
+    {"name": "桃園中正店", "dist": "桃園區", "addr": "中正路366號", "parking": "專屬停車場(中正一街入口)", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "桃園春日店", "dist": "桃園區", "addr": "春日路69-1號3樓", "parking": "大樓停車場(30分內免費)", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "桃園中壢店", "dist": "中壢區", "addr": "中山東路二段510號B1", "parking": "家樂福停車場(限高1.9m)", "elevator": "車道直達", "time": "08:00-23:00"},
+    {"name": "桃園新富店", "dist": "平鎮區", "addr": "新富五街66號2樓", "parking": "市場全聯停車場(30分免)", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "桃園南崁店", "dist": "蘆竹區", "addr": "桃園街118號B1", "parking": "家樂福停車場", "elevator": "客梯、升降機", "time": "24H"},
+    {"name": "新竹中華店", "dist": "新竹市", "addr": "中華路二段198號", "parking": "專屬停車場(限臨停30分)", "elevator": "電動升降機、梯車", "time": "24H"},
+    {"name": "基隆北站店", "dist": "基隆市", "addr": "港西街55號B1", "parking": "基隆站南站停車場", "elevator": "客梯、升降機", "time": "05:00-24:00"},
+
+    # 台中/台南/高雄
+    {"name": "台中豐原店", "dist": "台中市", "addr": "向陽路265號2F", "parking": "向陽路停車場(首時30元)", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "台中英士店", "dist": "台中市", "addr": "英士路71號", "parking": "正門口即可臨停", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "台中中港店", "dist": "台中市", "addr": "台灣大道二段16號10樓", "parking": "大樓後門卸貨區", "elevator": "貨梯、升降機", "time": "24H"},
+    {"name": "台中文心店", "dist": "台中市", "addr": "文心路三段65-1號1樓", "parking": "門口可停車卸貨", "elevator": "一樓據點、升降機", "time": "24H"},
+    {"name": "台南民生店", "dist": "台南市", "addr": "民生路二段72號B1", "parking": "國華停車場(限高1.8m)", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "台南安平店", "dist": "台南市", "addr": "中華西路二段16號", "parking": "家樂福停車場", "elevator": "一樓據點", "time": "24H"},
+    {"name": "高雄苓雅中正一店", "dist": "高雄市", "addr": "中正一路374號2樓", "parking": "全聯停車場(30分內免)", "elevator": "貨梯、推車", "time": "24H"},
+    {"name": "高雄復興店", "dist": "高雄市", "addr": "復興一路80號4樓", "parking": "大樓B1停車場(30分免)", "elevator": "客梯、梯車", "time": "24H"},
+    {"name": "高雄九如店", "dist": "高雄市", "addr": "九如一路960號", "parking": "大樓B2停車場", "elevator": "電梯、推車", "time": "24H"},
+    {"name": "高雄博愛店", "dist": "高雄市", "addr": "博愛一路372號9樓", "parking": "鄰近松江街停車場", "elevator": "客梯、推車", "time": "07:00-22:00"},
+]
+
+def handle_query(ui):
+    ui = ui.lower().strip()
+    # 清理常用贅字
+    clean_keyword = ui.replace("區", "").replace("店", "").replace("資訊", "").replace("停車", "").strip()
+
+    # A. 租倉流程 (依照客戶要求)
+    if any(k in ui for k in ["租", "如何租", "辦理", "手續"]):
+        return """🏠 **如何租倉辦理？**\\n建議先進行線上評估：👉 [**線上租倉評估導引**](https://3-dstorage.vercel.app)\\n\\n**簽約資料：**\\n- **個人戶**：準備**雙證件**及**悠遊卡**。\\n- **公司戶**：準備**商業登記表**、**負責人證件**及**悠遊卡**。\\n辦理方式：請於營業時間前往櫃檯辦理簽約。"""
+
+    # B. 優先檢索「區域」 (例如：中山、大安、中和)
+    matched_stores = [s for s in STORES_DB if clean_keyword in s['dist'].lower() or (len(clean_keyword) >= 2 and clean_keyword in s['name'].lower())]
+    
+    if matched_stores:
+        # 如果匹配到多個據點，先列出清單
+        res = f"🔍 **為您找到「{clean_keyword}」相關區域的所有據點：**\\n"
+        res += "📍 包含據點：" + "、".join([s['name'] for s in matched_stores]) + "\\n\\n---\\n\\n"
+        for s in matched_stores:
+            res += f"🏠 **{s['name']}**\\n- 地址: {s['addr']}\\n- 停車: {s['parking']}\\n- 設備: {s['elevator']}\\n- 時間: {s['time']}\\n\\n"
+        return res
+
+    # C. 如果沒命中地點但問設施
+    if any(k in ui for k in ["停車", "貨梯", "電梯", "車位"]):
+        return "🚗 **收多易全台據點多設有停車場與搬運設施。**\\n請問您想查詢哪個**行政區**(如: 中山、大安、中和) 或 **特定據點**？小幫手立即報位。"
+
+    return "🤖 您好！您可以輸入**區域名稱**(如: 文山、中正、板橋) 或 **特定店名**(如: 松山店) 獲取詳細資訊。"
+
+# --- 3. 介面呈現 ---
+with st.sidebar:
+    st.image("https://www.storeasy.com.tw/wp-content/themes/storeasy/images/logo.png", width=150)
+    st.markdown("### 🏢 全台據點管家")
+    st.info("已導入全台 58 個據點完整資料。\\n支援行政區檢索 (如: 中山區、文山區、桃園)。")
+    st.markdown("[📊 線上租倉評估](https://3-dstorage.vercel.app)")
+
+st.title("🧡 收多易客服小幫手")
+
+if "messages" not in st.session_state:
+    st.session_state.messages = []
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+
+if prompt := st.chat_input("請輸入地區、店名或問題..."):
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+    
+    with st.chat_message("assistant"):
+        ans = handle_query(prompt)
+        st.markdown(ans)
+    st.session_state.messages.append({"role": "assistant", "content": ans})
+`
+        }
+      }, document.getElementById("root")).then(() => {
+        document.getElementById('loading-msg').style.display = 'none';
+      });
+    </script>
+  </body>
+</html>
